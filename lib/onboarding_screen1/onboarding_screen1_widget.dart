@@ -1,0 +1,94 @@
+import '../flutter_flow/flutter_flow_theme.dart';
+import '../flutter_flow/flutter_flow_util.dart';
+import '../flutter_flow/flutter_flow_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'onboarding_screen1_model.dart';
+export 'onboarding_screen1_model.dart';
+
+class OnboardingScreen1Widget extends StatefulWidget {
+  const OnboardingScreen1Widget({Key? key}) : super(key: key);
+
+  @override
+  _OnboardingScreen1WidgetState createState() =>
+      _OnboardingScreen1WidgetState();
+}
+
+class _OnboardingScreen1WidgetState extends State<OnboardingScreen1Widget> {
+  late OnboardingScreen1Model _model;
+
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _unfocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _model = createModel(context, () => OnboardingScreen1Model());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _model.dispose();
+
+    _unfocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: scaffoldKey,
+      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
+          child: Container(
+            width: 458.3,
+            height: 939,
+            decoration: BoxDecoration(
+              color: FlutterFlowTheme.of(context).secondaryBackground,
+              image: DecorationImage(
+                fit: BoxFit.fill,
+                image: Image.asset(
+                  'assets/images/onboard.png',
+                ).image,
+              ),
+            ),
+            child: Stack(
+              children: [
+                Align(
+                  alignment: AlignmentDirectional(-0.16, 0.80),
+                  child: FFButtonWidget(
+                    onPressed: () => context.go('/signIn'),
+                    text: 'Next',
+                    options: FFButtonOptions(
+                      width: MediaQuery.of(context).size.width * 0.90,
+                      height: 67,
+                      color: Color(0xFFF15C00),
+                      splashColor: Color(0x777089AF),
+                      textStyle:
+                          FlutterFlowTheme.of(context).subtitle2.override(
+                                fontFamily: 'Urbanist',
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                      borderSide: BorderSide(
+                        color: Colors.transparent,
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
