@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:cached_network_image/cached_network_image.dart';
+
 import '../flutter_flow/flutter_flow_icon_button.dart';
 import '../flutter_flow/flutter_flow_theme.dart';
 import '../flutter_flow/flutter_flow_util.dart';
@@ -5,11 +9,30 @@ import '../flutter_flow/flutter_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../model/profilemodel.dart';
 import 'profile_model.dart';
 export 'profile_model.dart';
+import 'package:http/http.dart' as http;
+
+class profileinfoApi {
+  static Future<List<Profilemodel>> getprofileinfo(String userid) async {
+    final url =
+        Uri.parse('https://adminpanel.mediahype.site/API/viewprofileinfo');
+    final response = await http.post(url, body: {
+      'user_id': userid,
+    });
+    if (response.statusCode == 200) {
+      final List pinfo = json.decode(response.body);
+
+      return pinfo.map((json) => Profilemodel.fromJson(json)).toList();
+    }
+    throw Exception();
+  }
+}
 
 class ProfileWidget extends StatefulWidget {
-  const ProfileWidget({Key? key}) : super(key: key);
+  final String userid;
+  const ProfileWidget({Key? key, required this.userid}) : super(key: key);
 
   @override
   _ProfileWidgetState createState() => _ProfileWidgetState();
@@ -17,13 +40,15 @@ class ProfileWidget extends StatefulWidget {
 
 class _ProfileWidgetState extends State<ProfileWidget> {
   late ProfileModel _model;
-
+  List record = [];
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  List<Profilemodel> pinfo = [];
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => ProfileModel());
+    showprofileinfo();
 
     _model.textController1 = TextEditingController();
     _model.textController2 = TextEditingController();
@@ -36,9 +61,443 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
+
+  Future showprofileinfo() async {
+    final pinfo = await profileinfoApi.getprofileinfo(
+      widget.userid,
+    );
+    setState(() => this.pinfo = pinfo);
+  }
+
+  Widget buildform(Profilemodel pinfo) => Padding(
+        padding: EdgeInsetsDirectional.fromSTEB(0, 1, 0, 0),
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 5,
+                color: Color(0x430F1113),
+                offset: Offset(0, 2),
+              )
+            ],
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(4),
+              bottomRight: Radius.circular(4),
+              topLeft: Radius.circular(0),
+              topRight: Radius.circular(0),
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Align(
+                  alignment: AlignmentDirectional(0, 0),
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      child: CachedNetworkImage(
+                        imageUrl: "https://adminpanel.mediahype.site/" +
+                            pinfo.userProfilePic,
+                        placeholder: (context, url) =>
+                            new CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 30,
+                ),
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(30, 8, 30, 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(
+                        child: Form(
+                          key: _model.formKey,
+                          autovalidateMode: AutovalidateMode.disabled,
+                          child: Container(
+                            width: 100,
+                            height: 298.4,
+                            decoration: BoxDecoration(
+                              color: FlutterFlowTheme.of(context)
+                                  .secondaryBackground,
+                            ),
+                            child: Stack(
+                              children: [
+                                Align(
+                                  alignment: AlignmentDirectional(0, 1.30),
+                                  child: TextFormField(
+                                    controller: _model.textController1,
+                                    obscureText: false,
+                                    readOnly: true,
+                                    scrollPadding: EdgeInsets.only(bottom: 40),
+                                    decoration: InputDecoration(
+                                      labelText: pinfo.city,
+                                      hintStyle: FlutterFlowTheme.of(context)
+                                          .bodyText2
+                                          .override(
+                                            fontFamily: 'Lexend Deca',
+                                            color: Color(0xFF95A1AC),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      errorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      filled: true,
+                                      fillColor: Color(0xFFEBEBEB),
+                                      contentPadding:
+                                          EdgeInsetsDirectional.fromSTEB(
+                                              16, 16, 16, 16),
+                                    ),
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyText1
+                                        .override(
+                                          fontFamily: 'Urbanist',
+                                          color: Color(0xFF090F13),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    maxLines: null,
+                                    validator: _model.textController1Validator
+                                        .asValidator(context),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: AlignmentDirectional(0, -0.99),
+                                  child: TextFormField(
+                                    controller: _model.textController2,
+                                    obscureText: false,
+                                    readOnly: true,
+                                    decoration: InputDecoration(
+                                      labelText: pinfo.firstname,
+                                      hintStyle: FlutterFlowTheme.of(context)
+                                          .bodyText2
+                                          .override(
+                                            fontFamily: 'Lexend Deca',
+                                            color: Color(0xFF95A1AC),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      errorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      filled: true,
+                                      fillColor: Color(0xFFEBEBEB),
+                                      contentPadding:
+                                          EdgeInsetsDirectional.fromSTEB(
+                                              16, 16, 16, 16),
+                                    ),
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyText1
+                                        .override(
+                                          fontFamily: 'Urbanist',
+                                          color: Color(0xFF090F13),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    maxLines: null,
+                                    validator: _model.textController2Validator
+                                        .asValidator(context),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: AlignmentDirectional(0, -0.42),
+                                  child: TextFormField(
+                                    controller: _model.textController3,
+                                    autofocus: false,
+                                    readOnly: true,
+                                    obscureText: false,
+                                    decoration: InputDecoration(
+                                      labelText: pinfo.lastname,
+                                      hintStyle: FlutterFlowTheme.of(context)
+                                          .bodyText2
+                                          .override(
+                                            fontFamily: 'Lexend Deca',
+                                            color: Color(0xFF95A1AC),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      errorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      filled: true,
+                                      fillColor: Color(0xFFEBEBEB),
+                                      contentPadding:
+                                          EdgeInsetsDirectional.fromSTEB(
+                                              16, 16, 16, 16),
+                                    ),
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyText1
+                                        .override(
+                                          fontFamily: 'Urbanist',
+                                          color: Color(0xFF090F13),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    maxLines: null,
+                                    keyboardType: TextInputType.name,
+                                    validator: _model.textController3Validator
+                                        .asValidator(context),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: AlignmentDirectional(0, 0.15),
+                                  child: TextFormField(
+                                    controller: _model.textController4,
+                                    obscureText: false,
+                                    readOnly: true,
+                                    decoration: InputDecoration(
+                                      labelText: pinfo.userEmail,
+                                      hintStyle: FlutterFlowTheme.of(context)
+                                          .bodyText2
+                                          .override(
+                                            fontFamily: 'Lexend Deca',
+                                            color: Color(0xFF95A1AC),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                      suffixIcon: Icon(
+                                        Icons.mark_email_read,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      errorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      filled: true,
+                                      fillColor: Color(0xFFEBEBEB),
+                                      contentPadding:
+                                          EdgeInsetsDirectional.fromSTEB(
+                                              16, 16, 16, 16),
+                                    ),
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyText1
+                                        .override(
+                                          fontFamily: 'Urbanist',
+                                          color: Color(0xFF090F13),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    maxLines: null,
+                                    validator: _model.textController4Validator
+                                        .asValidator(context),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: AlignmentDirectional(0, 0.72),
+                                  child: TextFormField(
+                                    controller: _model.textController5,
+                                    obscureText: false,
+                                    readOnly: true,
+                                    decoration: InputDecoration(
+                                      labelText: pinfo.about,
+                                      hintStyle: FlutterFlowTheme.of(context)
+                                          .bodyText2
+                                          .override(
+                                            fontFamily: 'Lexend Deca',
+                                            color: Color(0xFF95A1AC),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0xFFF1F4F8),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      errorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Color(0x00000000),
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(38),
+                                      ),
+                                      filled: true,
+                                      fillColor: Color(0xFFEBEBEB),
+                                      contentPadding:
+                                          EdgeInsetsDirectional.fromSTEB(
+                                              16, 16, 16, 16),
+                                    ),
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyText1
+                                        .override(
+                                          fontFamily: 'Urbanist',
+                                          color: Color(0xFF090F13),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    maxLines: null,
+                                    validator: _model.textController5Validator
+                                        .asValidator(context),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(0, 52, 0, 12),
+                  child: FFButtonWidget(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    text: 'Go Back',
+                    options: FFButtonOptions(
+                      width: 220,
+                      height: 50,
+                      color: Color(0xFFF15C00),
+                      textStyle:
+                          FlutterFlowTheme.of(context).bodyText2.override(
+                                fontFamily: 'Lexend Deca',
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
+                              ),
+                      elevation: 3,
+                      borderSide: BorderSide(
+                        color: Colors.transparent,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +517,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             color: Color(0xFF090F13),
             size: 30,
           ),
-          onPressed: () {
-            print('IconButton pressed ...');
-          },
+          onPressed: () => {Navigator.pop(context)},
         ),
         title: Align(
           alignment: AlignmentDirectional(-0.2, 0),
@@ -79,495 +536,18 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(0, 1, 0, 0),
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 5,
-                      color: Color(0x430F1113),
-                      offset: Offset(0, 2),
-                    )
-                  ],
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
-                    topLeft: Radius.circular(0),
-                    topRight: Radius.circular(0),
-                  ),
-                ),
-                child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Align(
-                        alignment: AlignmentDirectional(0, 0),
-                        child: Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                            ),
-                            child: Image.asset(
-                              'assets/images/UI_avatar@2x.png',
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 12, 0, 12),
-                        child: FFButtonWidget(
-                          onPressed: () {
-                            print('Button pressed ...');
-                          },
-                          text: 'Edit Photo',
-                          options: FFButtonOptions(
-                            width: 130,
-                            height: 40,
-                            color: Color(0xFFF15C00),
-                            textStyle:
-                                FlutterFlowTheme.of(context).bodyText1.override(
-                                      fontFamily: 'Lexend Deca',
-                                      color: FlutterFlowTheme.of(context)
-                                          .primaryBtnText,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                            borderSide: BorderSide(
-                              color: Colors.transparent,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(8, 8, 8, 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Expanded(
-                              child: Form(
-                                key: _model.formKey,
-                                autovalidateMode: AutovalidateMode.disabled,
-                                child: Container(
-                                  width: 100,
-                                  height: 298.4,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, 0.87),
-                                        child: TextFormField(
-                                          controller: _model.textController1,
-                                          obscureText: false,
-                                          decoration: InputDecoration(
-                                            labelText:
-                                                'City and Country (optional)',
-                                            hintStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyText2
-                                                    .override(
-                                                      fontFamily: 'Lexend Deca',
-                                                      color: Color(0xFF95A1AC),
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedErrorBorder:
-                                                OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            filled: true,
-                                            fillColor: Color(0xFFEBEBEB),
-                                            contentPadding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    16, 16, 16, 16),
-                                          ),
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodyText1
-                                              .override(
-                                                fontFamily: 'Urbanist',
-                                                color: Color(0xFF090F13),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                          maxLines: null,
-                                          validator: _model
-                                              .textController1Validator
-                                              .asValidator(context),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, -0.84),
-                                        child: TextFormField(
-                                          controller: _model.textController2,
-                                          obscureText: false,
-                                          decoration: InputDecoration(
-                                            labelText: 'First Name (Required)',
-                                            hintStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyText2
-                                                    .override(
-                                                      fontFamily: 'Lexend Deca',
-                                                      color: Color(0xFF95A1AC),
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedErrorBorder:
-                                                OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            filled: true,
-                                            fillColor: Color(0xFFEBEBEB),
-                                            contentPadding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    16, 16, 16, 16),
-                                          ),
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodyText1
-                                              .override(
-                                                fontFamily: 'Urbanist',
-                                                color: Color(0xFF090F13),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                          maxLines: null,
-                                          validator: _model
-                                              .textController2Validator
-                                              .asValidator(context),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, -0.42),
-                                        child: TextFormField(
-                                          controller: _model.textController3,
-                                          autofocus: false,
-                                          obscureText: false,
-                                          decoration: InputDecoration(
-                                            labelText: 'Last name (Required)',
-                                            hintStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyText2
-                                                    .override(
-                                                      fontFamily: 'Lexend Deca',
-                                                      color: Color(0xFF95A1AC),
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedErrorBorder:
-                                                OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            filled: true,
-                                            fillColor: Color(0xFFEBEBEB),
-                                            contentPadding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    16, 16, 16, 16),
-                                            suffixIcon: Icon(
-                                              Icons.mark_email_read,
-                                            ),
-                                          ),
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodyText1
-                                              .override(
-                                                fontFamily: 'Urbanist',
-                                                color: Color(0xFF090F13),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                          maxLines: null,
-                                          keyboardType: TextInputType.name,
-                                          validator: _model
-                                              .textController3Validator
-                                              .asValidator(context),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, 0.02),
-                                        child: TextFormField(
-                                          controller: _model.textController4,
-                                          obscureText: false,
-                                          decoration: InputDecoration(
-                                            labelText:
-                                                'Email Address (Required)',
-                                            hintStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyText2
-                                                    .override(
-                                                      fontFamily: 'Lexend Deca',
-                                                      color: Color(0xFF95A1AC),
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedErrorBorder:
-                                                OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            filled: true,
-                                            fillColor: Color(0xFFEBEBEB),
-                                            contentPadding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    16, 16, 16, 16),
-                                          ),
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodyText1
-                                              .override(
-                                                fontFamily: 'Urbanist',
-                                                color: Color(0xFF090F13),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                          maxLines: null,
-                                          validator: _model
-                                              .textController4Validator
-                                              .asValidator(context),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, 0.44),
-                                        child: TextFormField(
-                                          controller: _model.textController5,
-                                          obscureText: false,
-                                          decoration: InputDecoration(
-                                            labelText: 'About Me (optional)',
-                                            hintStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyText2
-                                                    .override(
-                                                      fontFamily: 'Lexend Deca',
-                                                      color: Color(0xFF95A1AC),
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                    ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0xFFF1F4F8),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            focusedErrorBorder:
-                                                OutlineInputBorder(
-                                              borderSide: BorderSide(
-                                                color: Color(0x00000000),
-                                                width: 2,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(38),
-                                            ),
-                                            filled: true,
-                                            fillColor: Color(0xFFEBEBEB),
-                                            contentPadding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    16, 16, 16, 16),
-                                          ),
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodyText1
-                                              .override(
-                                                fontFamily: 'Urbanist',
-                                                color: Color(0xFF090F13),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                          maxLines: null,
-                                          validator: _model
-                                              .textController5Validator
-                                              .asValidator(context),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 12, 0, 12),
-                        child: FFButtonWidget(
-                          onPressed: () {
-                            print('Button_Secondary pressed ...');
-                          },
-                          text: 'Save Changes',
-                          options: FFButtonOptions(
-                            width: 230,
-                            height: 50,
-                            color: Color(0xFFF15C00),
-                            textStyle:
-                                FlutterFlowTheme.of(context).bodyText2.override(
-                                      fontFamily: 'Lexend Deca',
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                            elevation: 3,
-                            borderSide: BorderSide(
-                              color: Colors.transparent,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: ListView.builder(
+                scrollDirection: Axis.vertical,
+                shrinkWrap: true,
+                itemCount: pinfo.length,
+                itemBuilder: (context, index) {
+                  final form = pinfo[index];
+
+                  return buildform(form);
+                },
               ),
             ),
           ],

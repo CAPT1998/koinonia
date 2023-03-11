@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:koinonia/model/musics.dart';
+
+import '../Api/Networkutils.dart';
 import '../flutter_flow/flutter_flow_ad_banner.dart';
 import '../flutter_flow/flutter_flow_audio_player.dart';
 import '../flutter_flow/flutter_flow_icon_button.dart';
@@ -11,33 +16,174 @@ import 'playlist_model.dart';
 export 'playlist_model.dart';
 
 class PlaylistWidget extends StatefulWidget {
-  const PlaylistWidget({Key? key}) : super(key: key);
-
+  late final List image;
+  late final String playlistName;
+  late final String playlistId;
+  PlaylistWidget(this.image, this.playlistName, this.playlistId);
   @override
   _PlaylistWidgetState createState() => _PlaylistWidgetState();
 }
 
-class _PlaylistWidgetState extends State<PlaylistWidget> {
-  late PlaylistModel _model;
+class getAllplaylistsongsAPI {
+  static Future<List<Musics>> getallplaylistsongs(String playlistid) async {
+    //print("HElloworld");
 
+    final url =
+        Uri.parse('https://adminpanel.mediahype.site/API/getPlaylistMusic');
+    final response = await http.post(url, body: {
+      'user_id': '1',
+      'user_playlist_id': playlistid,
+    });
+
+    if (response.statusCode == 200) {
+      final List playlistmusic = json.decode(response.body);
+      //final List artistinfo = json.decode(response.body);
+
+      return playlistmusic.map((json) => Musics.fromJson(json)).toList();
+      //artistinfo.map((json) => Artists.fromJson(json)).toList();
+    }
+    throw Exception();
+  }
+}
+
+class _PlaylistWidgetState extends State<PlaylistWidget> {
+  List<Musics> playlistsongs = [];
+  String playlistid = "";
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _unfocusNode = FocusNode();
+  late Networkutils networkutils;
 
   @override
   void initState() {
     super.initState();
-    _model = createModel(context, () => PlaylistModel());
+    networkutils = Networkutils();
+
+    init1();
+    setState(() {
+      playlistid = widget.playlistId;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+  }
+
+  Future init1() async {
+    final playlistsongs =
+        await getAllplaylistsongsAPI.getallplaylistsongs(widget.playlistId);
+    setState(() => this.playlistsongs = playlistsongs);
+    // setState(() {
+    //   this.artistinfo = artistinfo;
+    //});
+    print("hello world");
+    //model = createModel(context, () => AlbumsModel());
 
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
+  Future showExitPopup(BuildContext context, id) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Are You Sure?'),
+          content: Text('Are You Want to Remove this music from playlist!'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('NO'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            // ignore: deprecated_member_use
+            ElevatedButton(
+              style: ButtonStyle(),
+              child: Text(
+                'Yes',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onPressed: () async {
+                await deletePlaylistMusic(id);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> deletePlaylistMusic(String id) async {
+    await networkutils.deleteMusic(id);
+    init1();
+    setState(() {});
+  }
+
   @override
   void dispose() {
-    _model.dispose();
+    //_model.dispose();
 
     _unfocusNode.dispose();
     super.dispose();
   }
+
+  Widget buildplaylistsongs(Musics playlistsongs) => Container(
+        child: GestureDetector(
+          onLongPress: () async {
+            await showExitPopup(context, playlistsongs.musicId);
+          },
+          child: Row(
+            //mainAxisSize: MainAxisSize.max,
+            children: [
+              Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(20, 20, 20, 0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Image.network(
+                    // ignore: prefer_interpolation_to_compose_strings
+                    "https://adminpanel.mediahype.site/" +
+                        playlistsongs.musicImage,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Row(
+                  // mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Column(
+                      children: [
+                        Padding(
+                          padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                          child: Text(
+                            playlistsongs.musicTitle,
+                            textAlign: TextAlign.start,
+                            style:
+                                FlutterFlowTheme.of(context).bodyText1.override(
+                                      fontFamily: 'Open Sans',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                          ),
+                        ),
+                        Text(
+                          playlistsongs.artists![0].artistName,
+                          textAlign: TextAlign.start,
+                          style:
+                              FlutterFlowTheme.of(context).bodyText1.override(
+                                    fontFamily: 'Open Sans',
+                                    color: Color(0xFF919191),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ]),
+            ],
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +203,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
             color: Colors.black,
             size: 30,
           ),
-          onPressed: () => context.go('/library'),
+          onPressed: () => {Navigator.pop(context)},
         ),
         title: Align(
           alignment: AlignmentDirectional(-0.2, 0),
@@ -80,9 +226,9 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
           onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
           child: Column(
             mainAxisSize: MainAxisSize.max,
-            children: [
+            children: <Widget>[
               FlutterFlowAdBanner(
-                width: MediaQuery.of(context).size.width,
+                width: 100,
                 height: 70,
                 showsTestAd: true,
               ),
@@ -90,26 +236,29 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                 width: 466.2,
                 height: 681.5,
                 decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).secondaryBackground,
+                  color: Colors.white,
                 ),
                 child: Stack(
                   children: [
-                    Align(
-                      alignment: AlignmentDirectional(-0.1, -0.82),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
-                        child: Image.asset(
-                          'assets/images/imageedit_2_5667739343.gif',
-                          width: 335,
-                          height: 191,
-                          fit: BoxFit.cover,
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(10, 0, 10, 0),
+                      child: Align(
+                        alignment: AlignmentDirectional(0, -0.82),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: Image.asset(
+                            'assets/images/imageedit_2_5667739343.gif',
+                            width: 360,
+                            height: 200,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
                     Align(
                       alignment: AlignmentDirectional(-0.69, -0.5),
                       child: Text(
-                        'Rainy Day',
+                        widget.playlistName,
                         style: FlutterFlowTheme.of(context).bodyText1.override(
                               fontFamily: 'Poppins',
                               color: Colors.white,
@@ -119,7 +268,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                       ),
                     ),
                     Align(
-                      alignment: AlignmentDirectional(-0.71, -0.42),
+                      alignment: AlignmentDirectional(-0.69, -0.42),
                       child: Text(
                         'Playlist By Anamwp',
                         style: FlutterFlowTheme.of(context).bodyText1.override(
@@ -207,7 +356,26 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                     Align(
                       alignment: AlignmentDirectional(0, 0.5),
                       child: Container(
-                        width: 440.3,
+                        width: MediaQuery.of(context).size.width,
+                        height: 234.8,
+                        decoration: BoxDecoration(
+                          color:
+                              FlutterFlowTheme.of(context).secondaryBackground,
+                        ),
+                        child: ListView.builder(
+                          itemCount: playlistsongs.length,
+                          itemBuilder: (context, index) {
+                            final Playlistsongs = playlistsongs[index];
+
+                            return buildplaylistsongs(Playlistsongs);
+                          },
+                        ),
+                      ),
+                    ),
+                    /*Align(
+                      alignment: AlignmentDirectional(0, 0.5),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
                         height: 234.8,
                         decoration: BoxDecoration(
                           color:
@@ -215,6 +383,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                         ),
                         child: ListView(
                           padding: EdgeInsets.zero,
+                          physics: ScrollPhysics(),
                           scrollDirection: Axis.vertical,
                           children: [
                             Container(
@@ -277,26 +446,26 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                                     ),
                                     new Expanded(
                                       flex: 1,
-                                      child: Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            MediaQuery.of(context).size.width *
-                                                0.37,
-                                            0,
-                                            0,
-                                            0),
-                                        child: FlutterFlowIconButton(
-                                          borderColor: Colors.transparent,
-                                          borderRadius: 30,
-                                          borderWidth: 1,
-                                          buttonSize: 60,
-                                          icon: Icon(
-                                            Icons.play_arrow_rounded,
-                                            color: Color(0xFFF15C00),
-                                            size: 25,
+                                      child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Padding(
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  0, 0, 0, 0),
+                                          child: FlutterFlowIconButton(
+                                            borderColor: Colors.transparent,
+                                            borderRadius: 30,
+                                            borderWidth: 1,
+                                            buttonSize: 60,
+                                            icon: Icon(
+                                              Icons.play_arrow_rounded,
+                                              color: Color(0xFFF15C00),
+                                              size: 25,
+                                            ),
+                                            onPressed: () {
+                                              print('IconButton pressed ...');
+                                            },
                                           ),
-                                          onPressed: () {
-                                            print('IconButton pressed ...');
-                                          },
                                         ),
                                       ),
                                     ),
@@ -337,7 +506,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                                     ),
                                     Padding(
                                       padding: EdgeInsetsDirectional.fromSTEB(
-                                          12, 0, 0, 0),
+                                          0, 0, 0, 0),
                                       child: Text(
                                         '29 Song',
                                         style: FlutterFlowTheme.of(context)
@@ -353,26 +522,25 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                                 ),
                                 new Expanded(
                                   flex: 1,
-                                  child: Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                        MediaQuery.of(context).size.width *
-                                            0.43,
-                                        0,
-                                        0,
-                                        0),
-                                    child: FlutterFlowIconButton(
-                                      borderColor: Colors.transparent,
-                                      borderRadius: 30,
-                                      borderWidth: 1,
-                                      buttonSize: 60,
-                                      icon: Icon(
-                                        Icons.play_arrow_rounded,
-                                        color: Color(0xFFF15C00),
-                                        size: 25,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          0, 0, 0, 0),
+                                      child: FlutterFlowIconButton(
+                                        borderColor: Colors.transparent,
+                                        borderRadius: 30,
+                                        borderWidth: 1,
+                                        buttonSize: 60,
+                                        icon: Icon(
+                                          Icons.play_arrow_rounded,
+                                          color: Color(0xFFF15C00),
+                                          size: 25,
+                                        ),
+                                        onPressed: () {
+                                          print('IconButton pressed ...');
+                                        },
                                       ),
-                                      onPressed: () {
-                                        print('IconButton pressed ...');
-                                      },
                                     ),
                                   ),
                                 ),
@@ -433,26 +601,25 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                                   ),
                                   new Expanded(
                                     flex: 1,
-                                    child: Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          MediaQuery.of(context).size.width *
-                                              0.42,
-                                          0,
-                                          0,
-                                          0),
-                                      child: FlutterFlowIconButton(
-                                        borderColor: Colors.transparent,
-                                        borderRadius: 30,
-                                        borderWidth: 1,
-                                        buttonSize: 60,
-                                        icon: Icon(
-                                          Icons.play_arrow_rounded,
-                                          color: Color(0xFFF15C00),
-                                          size: 25,
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            0, 0, 0, 0),
+                                        child: FlutterFlowIconButton(
+                                          borderColor: Colors.transparent,
+                                          borderRadius: 30,
+                                          borderWidth: 1,
+                                          buttonSize: 60,
+                                          icon: Icon(
+                                            Icons.play_arrow_rounded,
+                                            color: Color(0xFFF15C00),
+                                            size: 25,
+                                          ),
+                                          onPressed: () {
+                                            print('IconButton pressed ...');
+                                          },
                                         ),
-                                        onPressed: () {
-                                          print('IconButton pressed ...');
-                                        },
                                       ),
                                     ),
                                   ),
@@ -462,7 +629,7 @@ class _PlaylistWidgetState extends State<PlaylistWidget> {
                           ],
                         ),
                       ),
-                    ),
+                    ),*/
                   ],
                 ),
               ),

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:koinonia/likedsongs.dart';
 import 'package:page_transition/page_transition.dart';
+import '../../playlist/getallplaylist_widget.dart';
 import '../flutter_flow_theme.dart';
 
 import '../../index.dart';
@@ -108,11 +110,6 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
                   : SettingWidget(),
             ),
             FFRoute(
-              name: 'Profile',
-              path: 'profile',
-              builder: (context, params) => ProfileWidget(),
-            ),
-            FFRoute(
               name: 'Library',
               path: 'library',
               builder: (context, params) => params.isEmpty
@@ -120,9 +117,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
                   : LibraryWidget(),
             ),
             FFRoute(
+              name: 'testing',
+              path: 'testing',
+              builder: (context, params) => likedwidget(),
+            ),
+            FFRoute(
               name: 'Ministers',
               path: 'ministers',
-              builder: (context, params) => MinistersWidget(),
+              builder: (context, params) => likedwidget(),
             ),
             FFRoute(
               name: 'Albums',
@@ -132,18 +134,13 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
             FFRoute(
               name: 'Playlist',
               path: 'playlist',
-              builder: (context, params) => PlaylistWidget(),
+              builder: (context, params) => getallPlaylistWidget(),
             ),
             FFRoute(
               name: 'Following',
               path: 'following',
               builder: (context, params) => FollowingWidget(),
             ),
-            FFRoute(
-              name: 'Playing',
-              path: 'playing',
-              builder: (context, params) => PlayingWidget(),
-            )
           ].map((r) => r.toRoute(appStateNotifier)).toList(),
         ).toRoute(appStateNotifier),
       ],

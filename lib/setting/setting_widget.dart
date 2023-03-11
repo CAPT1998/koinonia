@@ -1,3 +1,6 @@
+import 'package:koinonia/model/notifications.dart';
+import 'package:koinonia/payment/choosePlanScreen.dart';
+
 import '../flutter_flow/flutter_flow_theme.dart';
 import '../flutter_flow/flutter_flow_util.dart';
 import '../flutter_flow/flutter_flow_widgets.dart';
@@ -5,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../profile/editprofile_widget.dart';
+import '../profile/profile_widget.dart';
 import 'setting_model.dart';
 export 'setting_model.dart';
 
@@ -24,8 +29,6 @@ class _SettingWidgetState extends State<SettingWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => SettingModel());
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
   @override
@@ -44,9 +47,9 @@ class _SettingWidgetState extends State<SettingWidget> {
         backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
         iconTheme:
             IconThemeData(color: FlutterFlowTheme.of(context).customColor4),
-        automaticallyImplyLeading: true,
+        automaticallyImplyLeading: false,
         title: Align(
-          alignment: AlignmentDirectional(-0.15, 0),
+          alignment: AlignmentDirectional(0, 0),
           child: Text(
             'Settings',
             textAlign: TextAlign.center,
@@ -59,7 +62,7 @@ class _SettingWidgetState extends State<SettingWidget> {
           ),
         ),
         actions: [],
-        centerTitle: false,
+        centerTitle: true,
         elevation: 0,
       ),
       body: Padding(
@@ -104,7 +107,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                                     padding: EdgeInsetsDirectional.fromSTEB(
                                         0, 0, 0, 0),
                                     child: Text(
-                                      'Adam',
+                                      'Guest',
                                       style: FlutterFlowTheme.of(context)
                                           .title1
                                           .override(
@@ -132,7 +135,33 @@ class _SettingWidgetState extends State<SettingWidget> {
                         child: Padding(
                           padding: EdgeInsetsDirectional.fromSTEB(15, 0, 0, 0),
                           child: FFButtonWidget(
-                            onPressed: () => context.go('/profile'),
+                            onPressed: () => {
+                              Navigator.of(context).push(
+                                PageRouteBuilder(
+                                  transitionDuration:
+                                      Duration(milliseconds: 300),
+                                  pageBuilder:
+                                      (ctx, animation, secondaryAnimation) =>
+                                          EditProfileWidget(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    return SlideTransition(
+                                      position: new Tween<Offset>(
+                                        begin: const Offset(1.0, 0.0),
+                                        end: Offset.zero,
+                                      ).animate(animation),
+                                      child: SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin: Offset.zero,
+                                          end: const Offset(1.0, 0.0),
+                                        ).animate(secondaryAnimation),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            },
                             text: 'Edit Profile',
                             icon: Icon(
                               Icons.edit,
@@ -164,18 +193,45 @@ class _SettingWidgetState extends State<SettingWidget> {
                 ),
               ],
             ),
-            Container(
-              width: MediaQuery.of(context).size.width,
-              height: 172.7,
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).secondaryBackground,
-                image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: Image.asset(
-                    'assets/images/Premium Subscription.png',
-                  ).image,
+            GestureDetector(
+              onTap: () => {
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    transitionDuration: Duration(milliseconds: 300),
+                    pageBuilder: (ctx, animation, secondaryAnimation) =>
+                        ChoosePlanScreen(),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                      return SlideTransition(
+                        position: new Tween<Offset>(
+                          begin: const Offset(1.0, 0.0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: Offset.zero,
+                            end: const Offset(1.0, 0.0),
+                          ).animate(secondaryAnimation),
+                          child: child,
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(10),
+              },
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context).secondaryBackground,
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: Image.asset(
+                      'assets/images/Premium Subscription.png',
+                    ).image,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
             Expanded(
@@ -188,7 +244,32 @@ class _SettingWidgetState extends State<SettingWidget> {
                     scrollDirection: Axis.vertical,
                     children: [
                       GestureDetector(
-                        onTap: () => context.go('/profile'),
+                        onTap: () => {
+                          Navigator.of(context).push(
+                            PageRouteBuilder(
+                              transitionDuration: Duration(milliseconds: 300),
+                              pageBuilder:
+                                  (ctx, animation, secondaryAnimation) =>
+                                      ProfileWidget(userid: '3'),
+                              transitionsBuilder: (context, animation,
+                                  secondaryAnimation, child) {
+                                return SlideTransition(
+                                  position: new Tween<Offset>(
+                                    begin: const Offset(1.0, 0.0),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: Offset.zero,
+                                      end: const Offset(1.0, 0.0),
+                                    ).animate(secondaryAnimation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        },
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           children: [
@@ -233,7 +314,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                                       alignment: AlignmentDirectional(0.9, 0),
                                       child: Icon(
                                         Icons.arrow_forward_ios,
-                                        color: Color(0xFF95A1AC),
+                                        color: Colors.black,
                                         size: 18,
                                       ),
                                     ),
@@ -269,16 +350,47 @@ class _SettingWidgetState extends State<SettingWidget> {
                                       size: 24,
                                     ),
                                   ),
-                                  Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                        24, 0, 0, 0),
-                                    child: Text(
-                                      'Notifications',
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyText1
-                                          .override(
-                                            fontFamily: 'Urbanist',
-                                          ),
+                                  GestureDetector(
+                                    onTap: () => {
+                                      Navigator.of(context).push(
+                                        PageRouteBuilder(
+                                          transitionDuration:
+                                              Duration(milliseconds: 300),
+                                          pageBuilder: (ctx, animation,
+                                                  secondaryAnimation) =>
+                                              notification(),
+                                          transitionsBuilder: (context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child) {
+                                            return SlideTransition(
+                                              position: new Tween<Offset>(
+                                                begin: const Offset(1.0, 0.0),
+                                                end: Offset.zero,
+                                              ).animate(animation),
+                                              child: SlideTransition(
+                                                position: Tween<Offset>(
+                                                  begin: Offset.zero,
+                                                  end: const Offset(1.0, 0.0),
+                                                ).animate(secondaryAnimation),
+                                                child: child,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          24, 0, 0, 0),
+                                      child: Text(
+                                        'Notifications',
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyText1
+                                            .override(
+                                              fontFamily: 'Urbanist',
+                                            ),
+                                      ),
                                     ),
                                   ),
                                   Expanded(
@@ -286,7 +398,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                                       alignment: AlignmentDirectional(0.9, 0),
                                       child: Icon(
                                         Icons.arrow_forward_ios,
-                                        color: Color(0xFF95A1AC),
+                                        color: Colors.black,
                                         size: 18,
                                       ),
                                     ),
@@ -330,6 +442,8 @@ class _SettingWidgetState extends State<SettingWidget> {
                                       style: FlutterFlowTheme.of(context)
                                           .bodyText1
                                           .override(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
                                             fontFamily: 'Urbanist',
                                           ),
                                     ),
@@ -339,7 +453,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                                       alignment: AlignmentDirectional(0.9, 0),
                                       child: Icon(
                                         Icons.arrow_forward_ios,
-                                        color: Color(0xFF95A1AC),
+                                        color: Colors.black,
                                         size: 18,
                                       ),
                                     ),
@@ -392,7 +506,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                                       alignment: AlignmentDirectional(0.9, 0),
                                       child: Icon(
                                         Icons.arrow_forward_ios,
-                                        color: Color(0xFF95A1AC),
+                                        color: Colors.black,
                                         size: 18,
                                       ),
                                     ),
@@ -445,7 +559,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                                       alignment: AlignmentDirectional(0.9, 0),
                                       child: Icon(
                                         Icons.arrow_forward_ios,
-                                        color: Color(0xFF95A1AC),
+                                        color: Colors.black,
                                         size: 18,
                                       ),
                                     ),
@@ -498,7 +612,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                                       alignment: AlignmentDirectional(0.9, 0),
                                       child: Icon(
                                         Icons.arrow_forward_ios,
-                                        color: Color(0xFF95A1AC),
+                                        color: Colors.black,
                                         size: 18,
                                       ),
                                     ),
@@ -562,7 +676,7 @@ class _SettingWidgetState extends State<SettingWidget> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 20),
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.center,

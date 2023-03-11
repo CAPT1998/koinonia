@@ -12,14 +12,13 @@ import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
-  const AudioPlayerWidget({
-    Key? key,
-    this.width,
-    this.height,
-  }) : super(key: key);
+  const AudioPlayerWidget(
+      {Key? key, this.width, this.height, required this.musicfile})
+      : super(key: key);
 
   final double? width;
   final double? height;
+  final String musicfile;
 
   @override
   _AudioPlayerWidgetState createState() => _AudioPlayerWidgetState();
@@ -35,6 +34,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     super.initState();
 
     _init();
+    _player.play();
   }
 
   Future<void> _init() async {
@@ -49,9 +49,11 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     });
     // Try to load audio from a source and catch any errors.
     try {
+      print(("https://koinonia.mediahype.site/" + widget.musicfile));
+      ;
       // AAC example: https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.aac
       await _player.setAudioSource(AudioSource.uri(
-          Uri.parse("https://pagaliworld.com/files/download/id/3260")));
+          Uri.parse("https://adminpanel.mediahype.site/" + widget.musicfile)));
     } catch (e) {
       print("Error loading audio source: $e");
     }

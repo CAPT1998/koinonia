@@ -4,6 +4,7 @@ import '../flutter_flow/flutter_flow_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../sign_in/sign_in_widget.dart';
 import 'onboarding_screen1_model.dart';
 export 'onboarding_screen1_model.dart';
 
@@ -62,7 +63,31 @@ class _OnboardingScreen1WidgetState extends State<OnboardingScreen1Widget> {
                 Align(
                   alignment: AlignmentDirectional(-0.16, 0.80),
                   child: FFButtonWidget(
-                    onPressed: () => context.go('/signIn'),
+                    onPressed: () => {
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          transitionDuration: Duration(milliseconds: 300),
+                          pageBuilder: (ctx, animation, secondaryAnimation) =>
+                              SignInWidget(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return SlideTransition(
+                              position: new Tween<Offset>(
+                                begin: const Offset(1.0, 0.0),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: Offset.zero,
+                                  end: const Offset(1.0, 0.0),
+                                ).animate(secondaryAnimation),
+                                child: child,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    },
                     text: 'Next',
                     options: FFButtonOptions(
                       width: MediaQuery.of(context).size.width * 0.90,

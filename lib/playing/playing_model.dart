@@ -1,18 +1,41 @@
-import '../flutter_flow/flutter_flow_ad_banner.dart';
-import '../flutter_flow/flutter_flow_theme.dart';
-import '../flutter_flow/flutter_flow_util.dart';
-import '../custom_code/widgets/index.dart' as custom_widgets;
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
+class Getplaylistmodel {
+  final String userPlaylistId;
+  final String userPlaylistName;
+  final int musicCount;
+  final List<Images> images;
 
-class PlayingModel extends FlutterFlowModel {
-  /// Initialization and disposal methods.
+  Getplaylistmodel({
+    required this.userPlaylistId,
+    required this.userPlaylistName,
+    required this.musicCount,
+    required this.images,
+  });
 
-  void initState(BuildContext context) {}
+  Getplaylistmodel.fromJson(Map<String, dynamic> json)
+      : userPlaylistId = json['user_playlist_id'] as String,
+        userPlaylistName = json['user_playlist_name'] as String,
+        musicCount = json['music_count'] as int,
+        images = (json['images'] as List?)!
+            .map((dynamic e) => Images.fromJson(e as Map<String, dynamic>))
+            .toList();
 
-  void dispose() {}
+  Map<String, dynamic> toJson() => {
+        'user_playlist_id': userPlaylistId,
+        'user_playlist_name': userPlaylistName,
+        'music_count': musicCount,
+        'images': images.map((e) => e.toJson()).toList()
+      };
+}
 
-  /// Additional helper methods are added here.
+class Images {
+  final String musicImage;
 
+  Images({
+    required this.musicImage,
+  });
+
+  Images.fromJson(Map<String, dynamic> json)
+      : musicImage = json['music_image'] as String;
+
+  Map<String, dynamic> toJson() => {'music_image': musicImage};
 }

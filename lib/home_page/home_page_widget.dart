@@ -1,3 +1,8 @@
+import 'package:koinonia/index.dart';
+import 'package:koinonia/likedsongs.dart';
+import 'package:koinonia/Api/Networkutils.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../flutter_flow/flutter_flow_animations.dart';
 import '../flutter_flow/flutter_flow_icon_button.dart';
 import '../flutter_flow/flutter_flow_theme.dart';
@@ -9,8 +14,49 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../model/notifications.dart';
+import '../model/viewAlbum.dart';
+import '../payment/choosePlanScreen.dart';
+import '../playlist/getallplaylist_widget.dart';
+import 'homepage_ministers.dart';
+import 'homepage_categorywidget.dart';
+import '../albums/albums_widget.dart';
+import 'homepage_playlistwidget.dart';
+import 'homepage_quickplay_widget.dart';
+import 'homepage_recentlyadded_widget.dart';
+import 'homepagealbumwidget.dart';
 import 'home_page_model.dart';
 export 'home_page_model.dart';
+
+Future<getmsg> featuredmessage() async {
+  final response = await http.get(
+      Uri.parse('https://adminpanel.mediahype.site/API/getfeaturedmessage'));
+
+  // Appropriate action depending upon the
+  // server response
+  if (response.statusCode == 200) {
+    return getmsg.fromJson(json.decode(response.body));
+  } else {
+    throw Exception('Failed to load featuredmessage');
+  }
+}
+
+class getmsg {
+  late String message;
+  late String notification;
+
+  getmsg({required this.message});
+  getmsg.fromJson(Map<String, dynamic> json) {
+    message = json['message'];
+    notification = json['notification'];
+  }
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['message'] = this.message;
+    data['notifciation'] = this.notification;
+    return data;
+  }
+}
 
 class HomePageWidget extends StatefulWidget {
   const HomePageWidget({Key? key}) : super(key: key);
@@ -22,7 +68,10 @@ class HomePageWidget extends StatefulWidget {
 class _HomePageWidgetState extends State<HomePageWidget>
     with TickerProviderStateMixin {
   late HomePageModel _model;
-
+  String messag = "";
+  late Future<getmsg> futureAlbum;
+  List albumimage = [];
+  List<Albummodel> music = [];
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _unfocusNode = FocusNode();
   List<String> images = [
@@ -57,8 +106,12 @@ class _HomePageWidgetState extends State<HomePageWidget>
 
   @override
   void initState() {
+    //  getalbums();
+
     super.initState();
     _model = createModel(context, () => HomePageModel());
+    //getmsg();
+    futureAlbum = featuredmessage();
 
     setupAnimations(
       animationsMap.values.where((anim) =>
@@ -78,6 +131,71 @@ class _HomePageWidgetState extends State<HomePageWidget>
     super.dispose();
   }
 
+  Widget buildAlbum(
+    Albummodel music,
+  ) =>
+      Container(
+        child: GestureDetector(
+          onTap: () {
+            /*  
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => MinistersWidget(
+                  album.albumId,
+                  album.albumName,
+                  album.albumImage,
+                  '',
+                  album.isLiked,
+                  "Album",
+                ),
+              ),
+            );*/
+          },
+          child: Column(
+            //mainAxisSize: MainAxisSize.max,
+            children: [
+              Align(
+                alignment: AlignmentDirectional(0.15, 0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: Image.network(
+                    // ignore: prefer_interpolation_to_compose_strings
+                    "https://adminpanel.mediahype.site/" + music.albumImage,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Container(
+                child: Align(
+                  alignment: AlignmentDirectional(0, -0.15),
+                  child: Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(0, 5, 0, 0),
+                      child: Text(
+                        music.albumartistname,
+                        style: FlutterFlowTheme.of(context).bodyText1.override(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      )),
+                ),
+              ),
+              Container(
+                  child: Text(
+                music.albumName,
+                style: FlutterFlowTheme.of(context).bodyText1.override(
+                      fontFamily: 'Inter',
+                      color: Color(0xFFA7A7A7),
+                      fontSize: 10,
+                      fontWeight: FontWeight.normal,
+                    ),
+              ))
+            ],
+          ),
+        ),
+      );
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,64 +219,92 @@ class _HomePageWidgetState extends State<HomePageWidget>
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              Align(
-                alignment: AlignmentDirectional(0, 0),
-                child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(
-                      MediaQuery.of(context).size.width * 0.41, 0, 0, 0),
-                  child: FFButtonWidget(
-                    onPressed: () {
-                      var snackBar = SnackBar(
-                        content: Text(
-                          'Payment',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Color(0xFFF15C00),
-                            fontWeight: FontWeight.bold,
+              Flexible(
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                    child: FFButtonWidget(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          PageRouteBuilder(
+                            transitionDuration: Duration(milliseconds: 300),
+                            pageBuilder: (ctx, animation, secondaryAnimation) =>
+                                ChoosePlanScreen(),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              return SlideTransition(
+                                position: new Tween<Offset>(
+                                  begin: const Offset(1.0, 0.0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: Offset.zero,
+                                    end: const Offset(1.0, 0.0),
+                                  ).animate(secondaryAnimation),
+                                  child: child,
+                                ),
+                              );
+                            },
                           ),
+                        );
+                      },
+                      text: 'Upgrade',
+                      options: FFButtonOptions(
+                        width: MediaQuery.of(context).size.width * 0.26,
+                        height: 30,
+                        color: Color(0xFFF15C00),
+                        textStyle:
+                            FlutterFlowTheme.of(context).subtitle2.override(
+                                  fontFamily: 'Poppins',
+                                  color: Colors.white,
+                                ),
+                        borderSide: BorderSide(
+                          color: Colors.transparent,
+                          width: 1,
                         ),
-                        shape: StadiumBorder(),
-                        width: 200,
-                        duration: Duration(seconds: 1),
-                        behavior: SnackBarBehavior.floating,
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    },
-                    text: 'Upgrade',
-                    options: FFButtonOptions(
-                      width: MediaQuery.of(context).size.width * 0.26,
-                      height: 30,
-                      color: Color(0xFFF15C00),
-                      textStyle:
-                          FlutterFlowTheme.of(context).subtitle2.override(
-                                fontFamily: 'Poppins',
-                                color: Colors.white,
-                              ),
-                      borderSide: BorderSide(
-                        color: Colors.transparent,
-                        width: 1,
+                        borderRadius: BorderRadius.circular(23),
                       ),
-                      borderRadius: BorderRadius.circular(23),
                     ),
                   ),
                 ),
               ),
-              new Expanded(
-                flex: 1,
-                child: FlutterFlowIconButton(
-                  borderColor: Colors.transparent,
-                  borderRadius: 30,
-                  borderWidth: 1,
-                  buttonSize: 60,
-                  icon: FaIcon(
-                    FontAwesomeIcons.solidBell,
-                    color: Color(0xFFF15C00),
-                    size: 25,
-                  ),
-                  onPressed: () {
-                    print('IconButton pressed ...');
-                  },
+              FlutterFlowIconButton(
+                borderColor: Colors.transparent,
+                borderRadius: 30,
+                borderWidth: 1,
+                buttonSize: 60,
+                icon: FaIcon(
+                  FontAwesomeIcons.solidBell,
+                  color: Color(0xFFF15C00),
+                  size: 25,
                 ),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 300),
+                      pageBuilder: (ctx, animation, secondaryAnimation) =>
+                          notification(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        return SlideTransition(
+                          position: new Tween<Offset>(
+                            begin: const Offset(1.0, 0.0),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: Offset.zero,
+                              end: const Offset(1.0, 0.0),
+                            ).animate(secondaryAnimation),
+                            child: child,
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -168,8 +314,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        child: GestureDetector(
-          onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
+        child: Container(
+          color: Colors.white,
           child: Column(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.start,
@@ -185,7 +331,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                           alignment: AlignmentDirectional(-0.1, 0.1),
                           child: Padding(
                             padding:
-                                EdgeInsetsDirectional.fromSTEB(20, 19, 0, 0),
+                                EdgeInsetsDirectional.fromSTEB(20, 15, 0, 0),
                             child: Text(
                               'Featured Message',
                               textAlign: TextAlign.end,
@@ -202,10 +348,10 @@ class _HomePageWidgetState extends State<HomePageWidget>
                       ],
                     ),
                     Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 11, 0, 0),
+                      padding: EdgeInsetsDirectional.fromSTEB(10, 9, 10, 0),
                       child: Container(
                         //child: Center(child: Text('test'),),
-                        width: 335,
+                        width: MediaQuery.of(context).size.width,
                         height: 227,
                         decoration: BoxDecoration(
                           color:
@@ -218,52 +364,66 @@ class _HomePageWidgetState extends State<HomePageWidget>
                           ),
                           borderRadius: BorderRadius.circular(22),
                         ),
+
                         child: Column(
                           mainAxisSize: MainAxisSize.max,
                           children: [
-                            Align(
-                              alignment: AlignmentDirectional(1, 0.05),
-                              child: Center(
-                                child: Text(
-                                  'Featured Message displays here!',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: 'Urbanist',
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                            Padding(
+                              padding:
+                                  EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
+                              child: FutureBuilder<getmsg>(
+                                future: futureAlbum,
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    return Text(
+                                      snapshot.data!.message,
+                                      style: TextStyle(
+                                        fontFamily: 'Urbanist',
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return Text("${snapshot.error}");
+                                  }
+                                  return Text("loading...");
+                                },
                               ),
                             ),
-                            Align(
-                              alignment: AlignmentDirectional(0.6, 0.05),
-                              child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    70, 160, 0, 0),
-                                child: FFButtonWidget(
-                                  onPressed: () {
-                                    print('Button pressed ...');
-                                  },
-                                  text: 'Concert',
-                                  options: FFButtonOptions(
-                                    width: 100,
-                                    color: Color(0xFFF15C00),
-                                    textStyle: FlutterFlowTheme.of(context)
-                                        .subtitle2
-                                        .override(
-                                          fontFamily: 'Urbanist',
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
+                            Column(
+                              children: [
+                                Align(
+                                  alignment: Alignment.topRight,
+                                  child: Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(
+                                        0, 130, 20, 0),
+                                    child: FFButtonWidget(
+                                      onPressed: () {
+                                        print('Button pressed ...');
+                                      },
+                                      text: 'Concert',
+                                      options: FFButtonOptions(
+                                        width: 100,
+                                        color: Color(0xFFF15C00),
+                                        textStyle: FlutterFlowTheme.of(context)
+                                            .subtitle2
+                                            .override(
+                                              fontFamily: 'Urbanist',
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                        borderSide: BorderSide(
+                                          color: Colors.transparent,
+                                          width: 1,
                                         ),
-                                    borderSide: BorderSide(
-                                      color: Colors.transparent,
-                                      width: 1,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                         ),
@@ -279,10 +439,85 @@ class _HomePageWidgetState extends State<HomePageWidget>
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           Align(
+                            alignment: AlignmentDirectional(0, 0),
+                            child: Padding(
+                              padding:
+                                  EdgeInsetsDirectional.fromSTEB(20, 0, 0, 0),
+                              child: Text(
+                                'Our Products',
+                                textAlign: TextAlign.end,
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyText1
+                                    .override(
+                                      color: Colors.black,
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ),
+                          ),
+                          Flexible(
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(
+                                      0, 0, 20, 0),
+                                  child: TextButton(
+                                    onPressed: () => {},
+                                    child: Text(
+                                      'See all',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Poppins',
+                                      ),
+                                    ),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Color(0xFFF15C00),
+                                      //disabledForegroundColor : Colors.grey, // Disable color
+                                    ),
+                                  )),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => {}, //when user taps on our prodcts
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.99,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        child: Padding(
+                          padding: EdgeInsetsDirectional.fromSTEB(10, 0, 0, 0),
+                          child: Stack(
+                            // mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Image.asset(
+                                'assets/images/buy.png',
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Align(
                             alignment: AlignmentDirectional(-0.1, 0.1),
                             child: Padding(
                               padding:
-                                  EdgeInsetsDirectional.fromSTEB(20, 11, 0, 0),
+                                  EdgeInsetsDirectional.fromSTEB(20, 0, 0, 0),
                               child: Text(
                                 'Recently Added',
                                 textAlign: TextAlign.end,
@@ -297,415 +532,47 @@ class _HomePageWidgetState extends State<HomePageWidget>
                             ),
                           ),
                           Flexible(
-                            child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    MediaQuery.of(context).size.width * 0.27,
-                                    11,
-                                    0,
-                                    0),
-                                child: TextButton(
-                                  onPressed: () => context.go('/playing'),
-                                  child: Text(
-                                    'See all',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(
+                                      0, 0, 20, 0),
+                                  child: TextButton(
+                                    onPressed: () => {},
+                                    child: Text(
+                                      'See all',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Color(0xFFF15C00),
-                                    //disabledForegroundColor : Colors.grey, // Disable color
-                                  ),
-                                )),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Color(0xFFF15C00),
+                                      //disabledForegroundColor : Colors.grey, // Disable color
+                                    ),
+                                  )),
+                            ),
                           ),
                         ],
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => context.go('/playing'),
+                      onTap: () => {},
                       child: Container(
                         width: MediaQuery.of(context).size.width * 0.99,
-                        height: 150,
+                        height: 140,
                         decoration: BoxDecoration(
                           color:
                               FlutterFlowTheme.of(context).secondaryBackground,
                         ),
                         child: Padding(
-                          padding:
-                              EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
+                          padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
                           child: Row(
                             mainAxisSize: MainAxisSize.max,
                             children: [
                               Expanded(
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Expanded(
-                                        child: ListView(
-                                          padding: EdgeInsets.zero,
-                                          scrollDirection: Axis.horizontal,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 120,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                        child: Image.asset(
-                                                          'assets/images/ra1.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        '610: Bill Sullivan....',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 4,
-                                                      color: Colors.transparent,
-                                                      offset: Offset(6, 2),
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                        child: Image.asset(
-                                                          'assets/images/ra2.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        '487: Mike Rowe....',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 4,
-                                                      color: Colors.transparent,
-                                                      offset: Offset(6, 2),
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                        child: Image.asset(
-                                                          'assets/images/ra3.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        '938: Tom Wright .',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 4,
-                                                      color: Colors.transparent,
-                                                      offset: Offset(6, 2),
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                        child: Image.asset(
-                                                          'assets/images/user6.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        '610: Bill Sullivan...',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 4,
-                                                      color: Colors.transparent,
-                                                      offset: Offset(6, 2),
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 0, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                        child: Image.asset(
-                                                          'assets/images/user3.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        '610: Bill Sullivan...',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                child: homepagerecentlyadded(),
                               ),
                             ],
                           ),
@@ -725,7 +592,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                             alignment: AlignmentDirectional(-0.1, 0.1),
                             child: Padding(
                               padding:
-                                  EdgeInsetsDirectional.fromSTEB(20, 11, 0, 0),
+                                  EdgeInsetsDirectional.fromSTEB(20, 0, 0, 0),
                               child: Text(
                                 'Ministers',
                                 textAlign: TextAlign.end,
@@ -740,418 +607,46 @@ class _HomePageWidgetState extends State<HomePageWidget>
                             ),
                           ),
                           Flexible(
-                            child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    MediaQuery.of(context).size.width * 0.48,
-                                    11,
-                                    0,
-                                    0),
-                                child: TextButton(
-                                  onPressed: () => context.go('/ministers'),
-                                  child: Text(
-                                    'See all',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(
+                                      0, 0, 20, 0),
+                                  child: TextButton(
+                                    onPressed: () => {},
+                                    child: Text(
+                                      'See all',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Color(0xFFF15C00),
-                                    //disabledForegroundColor : Colors.grey, // Disable color
-                                  ),
-                                )),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Color(0xFFF15C00),
+                                      //disabledForegroundColor : Colors.grey, // Disable color
+                                    ),
+                                  )),
+                            ),
                           ),
                         ],
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => context.go('/ministers'),
+                      onTap: () => {},
                       child: Container(
                         width: MediaQuery.of(context).size.width,
-                        height: 150,
+                        height: 140,
                         decoration: BoxDecoration(
-                          color:
-                              FlutterFlowTheme.of(context).secondaryBackground,
+                          color: Colors.white,
                         ),
                         child: Padding(
-                          padding:
-                              EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
+                          padding: EdgeInsetsDirectional.fromSTEB(0, 10, 0, 10),
                           child: Row(
                             mainAxisSize: MainAxisSize.max,
-                            children: [
+                            children: <Widget>[
                               Expanded(
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Expanded(
-                                        child: ListView(
-                                          padding: EdgeInsets.zero,
-                                          scrollDirection: Axis.horizontal,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(9),
-                                                        child: Image.asset(
-                                                          'assets/images/m1.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        'Perlas & Conchas',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 4,
-                                                      color: Colors.transparent,
-                                                      offset: Offset(6, 2),
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(9),
-                                                        child: Image.asset(
-                                                          'assets/images/m2.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        'Apple Talk',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 4,
-                                                      color: Colors.transparent,
-                                                      offset: Offset(6, 2),
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(9),
-                                                        child: Image.asset(
-                                                          'assets/images/m1.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        'Penyanyi Lagu.',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 4,
-                                                      color: Colors.transparent,
-                                                      offset: Offset(6, 2),
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(9),
-                                                        child: Image.asset(
-                                                          'assets/images/m2.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        '610: Bill Sullivan...',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 10, 0),
-                                              child: Container(
-                                                width: 100,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      blurRadius: 4,
-                                                      color: Colors.transparent,
-                                                      offset: Offset(6, 2),
-                                                    )
-                                                  ],
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  0, 0, 1, 0),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(9),
-                                                        child: Image.asset(
-                                                          'assets/images/m1.png',
-                                                          width: 100,
-                                                          height: 100,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 5,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsetsDirectional
-                                                              .fromSTEB(
-                                                                  3, 0, 0, 0),
-                                                      child: Text(
-                                                        '610: Bill Sullivan...',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyText1
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Urbanist',
-                                                              color:
-                                                                  Colors.black,
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ).animateOnPageLoad(animationsMap[
-                                                  'containerOnPageLoadAnimation1']!),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                child: homepageministerwidget(),
                               ),
                             ],
                           ),
@@ -1171,7 +666,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                             alignment: AlignmentDirectional(-0.1, 0.1),
                             child: Padding(
                               padding:
-                                  EdgeInsetsDirectional.fromSTEB(20, 19, 0, 0),
+                                  EdgeInsetsDirectional.fromSTEB(20, 0, 0, 0),
                               child: Text(
                                 'Quick Play',
                                 textAlign: TextAlign.end,
@@ -1186,27 +681,27 @@ class _HomePageWidgetState extends State<HomePageWidget>
                             ),
                           ),
                           Flexible(
-                            child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    MediaQuery.of(context).size.width * 0.43,
-                                    19,
-                                    0,
-                                    0),
-                                child: TextButton(
-                                  onPressed: () {},
-                                  child: Text(
-                                    'See all',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(
+                                      0, 0, 20, 0),
+                                  child: TextButton(
+                                    onPressed: () {},
+                                    child: Text(
+                                      'See all',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Color(0xFFF15C00),
-                                    //disabledForegroundColor : Colors.grey, // Disable color
-                                  ),
-                                )),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Color(0xFFF15C00),
+                                      //disabledForegroundColor : Colors.grey, // Disable color
+                                    ),
+                                  )),
+                            ),
                           ),
                         ],
                       ),
@@ -1221,336 +716,12 @@ class _HomePageWidgetState extends State<HomePageWidget>
                   color: Colors.white,
                 ),
                 child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
+                  padding: EdgeInsetsDirectional.fromSTEB(0, 10, 0, 10),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Expanded(
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          height: MediaQuery.of(context).size.height * 0.17,
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              Container(
-                                child: Expanded(
-                                  child: ListView(
-                                    padding: EdgeInsets.zero,
-                                    scrollDirection: Axis.horizontal,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            10, 0, 10, 0),
-                                        child: Container(
-                                          width: 100,
-                                          height: 100,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(9),
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 0, 1, 0),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  child: Image.asset(
-                                                    'assets/images/user6.png',
-                                                    width: 100,
-                                                    height: 100,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 5,
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(3, 0, 0, 0),
-                                                child: Text(
-                                                  'Dr. Death',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyText1
-                                                      .override(
-                                                        fontFamily: 'Urbanist',
-                                                        color: Colors.black,
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ).animateOnPageLoad(animationsMap[
-                                            'containerOnPageLoadAnimation1']!),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            0, 0, 10, 0),
-                                        child: Container(
-                                          width: 100,
-                                          height: 100,
-                                          decoration: BoxDecoration(
-                                            color: Colors.transparent,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                blurRadius: 4,
-                                                color: Colors.transparent,
-                                                offset: Offset(6, 2),
-                                              )
-                                            ],
-                                            borderRadius:
-                                                BorderRadius.circular(9),
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 0, 1, 0),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  child: Image.asset(
-                                                    'assets/images/user.webp',
-                                                    width: 100,
-                                                    height: 100,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 5,
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(3, 0, 0, 0),
-                                                child: Text(
-                                                  'GENERASIAN',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyText1
-                                                      .override(
-                                                        fontFamily: 'Urbanist',
-                                                        color: Colors.black,
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ).animateOnPageLoad(animationsMap[
-                                            'containerOnPageLoadAnimation1']!),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            0, 0, 10, 0),
-                                        child: Container(
-                                          width: 100,
-                                          height: 100,
-                                          decoration: BoxDecoration(
-                                            color: Colors.transparent,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                blurRadius: 4,
-                                                color: Colors.transparent,
-                                                offset: Offset(6, 2),
-                                              )
-                                            ],
-                                            borderRadius:
-                                                BorderRadius.circular(9),
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 0, 1, 0),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  child: Image.asset(
-                                                    'assets/images/455ae48a81e56c1d908f971b50d0f823.png',
-                                                    width: 100,
-                                                    height: 100,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 5,
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(3, 0, 0, 0),
-                                                child: Text(
-                                                  'Penyanyi Lagu',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyText1
-                                                      .override(
-                                                        fontFamily: 'Urbanist',
-                                                        color: Colors.black,
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ).animateOnPageLoad(animationsMap[
-                                            'containerOnPageLoadAnimation1']!),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            0, 0, 10, 0),
-                                        child: Container(
-                                          width: 100,
-                                          height: 100,
-                                          decoration: BoxDecoration(
-                                            color: Colors.transparent,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                blurRadius: 4,
-                                                color: Colors.transparent,
-                                                offset: Offset(6, 2),
-                                              )
-                                            ],
-                                            borderRadius:
-                                                BorderRadius.circular(9),
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 0, 1, 0),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  child: Image.asset(
-                                                    'assets/images/dd9b326a3b43c57e97f288f094a69930.png',
-                                                    width: 100,
-                                                    height: 100,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 5,
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(3, 0, 0, 0),
-                                                child: Text(
-                                                  '610: Bill Sullivan...',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyText1
-                                                      .override(
-                                                        fontFamily: 'Urbanist',
-                                                        color: Colors.black,
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ).animateOnPageLoad(animationsMap[
-                                            'containerOnPageLoadAnimation1']!),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            0, 0, 10, 0),
-                                        child: Container(
-                                          width: 100,
-                                          height: 100,
-                                          decoration: BoxDecoration(
-                                            color: Colors.transparent,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                blurRadius: 4,
-                                                color: Colors.transparent,
-                                                offset: Offset(6, 2),
-                                              )
-                                            ],
-                                            borderRadius:
-                                                BorderRadius.circular(9),
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(0, 0, 1, 0),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  child: Image.asset(
-                                                    'assets/images/Rectangle Copy.png',
-                                                    width: 100,
-                                                    height: 100,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: 5,
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(3, 0, 0, 0),
-                                                child: Text(
-                                                  '98:Zen',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyText1
-                                                      .override(
-                                                        fontFamily: 'Urbanist',
-                                                        color: Colors.black,
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ).animateOnPageLoad(animationsMap[
-                                            'containerOnPageLoadAnimation1']!),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        child: homepagequickplay(),
                       ),
                     ],
                   ),
@@ -1569,7 +740,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                       Align(
                         alignment: AlignmentDirectional(-0.1, 0.1),
                         child: Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(20, 19, 0, 0),
+                          padding: EdgeInsetsDirectional.fromSTEB(20, 1, 0, 0),
                           child: Text(
                             'Albums',
                             textAlign: TextAlign.end,
@@ -1583,14 +754,150 @@ class _HomePageWidgetState extends State<HomePageWidget>
                         ),
                       ),
                       Flexible(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                              padding:
+                                  EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
+                              child: TextButton(
+                                onPressed: () => {
+                                  Navigator.of(context).push(
+                                    PageRouteBuilder(
+                                      transitionDuration:
+                                          Duration(milliseconds: 300),
+                                      pageBuilder: (ctx, animation,
+                                              secondaryAnimation) =>
+                                          AlbumsWidget(),
+                                      transitionsBuilder: (context, animation,
+                                          secondaryAnimation, child) {
+                                        return SlideTransition(
+                                          position: new Tween<Offset>(
+                                            begin: const Offset(1.0, 0.0),
+                                            end: Offset.zero,
+                                          ).animate(animation),
+                                          child: SlideTransition(
+                                            position: Tween<Offset>(
+                                              begin: Offset.zero,
+                                              end: const Offset(1.0, 0.0),
+                                            ).animate(secondaryAnimation),
+                                            child: child,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                },
+                                child: Text(
+                                  'See all',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Color(0xFFF15C00),
+                                  //disabledForegroundColor : Colors.grey, // Disable color
+                                ),
+                              )),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height * 0.23,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                ),
+                child: Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(0, 10, 0, 10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.go('/albums'),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          height: MediaQuery.of(context).size.height * 0.20,
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: <Widget>[
+                              Expanded(
+                                child: homepagealbumwidget(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context).secondaryBackground,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Align(
+                      alignment: AlignmentDirectional(-0.1, 0.1),
+                      child: Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(20, 0, 0, 0),
+                        child: Text(
+                          'Playlists',
+                          textAlign: TextAlign.end,
+                          style:
+                              FlutterFlowTheme.of(context).bodyText1.override(
+                                    fontFamily: 'Urbanist',
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                      ),
+                    ),
+                    Flexible(
+                      child: Align(
+                        alignment: Alignment.centerRight,
                         child: Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                MediaQuery.of(context).size.width * 0.52,
-                                19,
-                                0,
-                                0),
+                            padding:
+                                EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
                             child: TextButton(
-                              onPressed: () => context.go('/albums'),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  PageRouteBuilder(
+                                    transitionDuration:
+                                        Duration(milliseconds: 300),
+                                    pageBuilder:
+                                        (ctx, animation, secondaryAnimation) =>
+                                            getallPlaylistWidget(),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      return SlideTransition(
+                                        position: new Tween<Offset>(
+                                          begin: const Offset(1.0, 0.0),
+                                          end: Offset.zero,
+                                        ).animate(animation),
+                                        child: SlideTransition(
+                                          position: Tween<Offset>(
+                                            begin: Offset.zero,
+                                            end: const Offset(1.0, 0.0),
+                                          ).animate(secondaryAnimation),
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
                               child: Text(
                                 'See all',
                                 style: TextStyle(
@@ -1605,403 +912,6 @@ class _HomePageWidgetState extends State<HomePageWidget>
                               ),
                             )),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.20,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                ),
-                child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.go('/albums'),
-                        child: Container(
-                          width: MediaQuery.of(context).size.width * 0.93,
-                          height: MediaQuery.of(context).size.height * 0.17,
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              Expanded(
-                                child: ListView(
-                                  padding: EdgeInsets.zero,
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          10, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 24,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/a1.png',
-                                                  width: 120,
-                                                  height: 100,
-                                                  fit: BoxFit.fill,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                'Positions',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4,
-                                              color: Colors.transparent,
-                                              offset: Offset(6, 2),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/a2.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                'Motomami',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4,
-                                              color: Colors.transparent,
-                                              offset: Offset(6, 2),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/a3.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                'Dogefer.',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4,
-                                              color: Colors.transparent,
-                                              offset: Offset(6, 2),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/user6.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                '610: Bill Sullivan...',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4,
-                                              color: Colors.transparent,
-                                              offset: Offset(6, 2),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/user3.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                '610: Bill Sullivan...',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).secondaryBackground,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional(-0.1, 0.1),
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(20, 19, 0, 0),
-                        child: Text(
-                          'Playlists',
-                          textAlign: TextAlign.end,
-                          style:
-                              FlutterFlowTheme.of(context).bodyText1.override(
-                                    fontFamily: 'Urbanist',
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                      ),
-                    ),
-                    Flexible(
-                      child: Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              MediaQuery.of(context).size.width * 0.51,
-                              19,
-                              0,
-                              0),
-                          child: TextButton(
-                            onPressed: () => context.go('/playlist'),
-                            child: Text(
-                              'See all',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: Color(0xFFF15C00),
-                              //disabledForegroundColor : Colors.grey, // Disable color
-                            ),
-                          )),
                     ),
                   ],
                 ),
@@ -2013,14 +923,39 @@ class _HomePageWidgetState extends State<HomePageWidget>
                   color: Colors.white,
                 ),
                 child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
+                  padding: EdgeInsetsDirectional.fromSTEB(0, 10, 0, 10),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       GestureDetector(
-                        onTap: () => context.go('/playlist'),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            PageRouteBuilder(
+                              transitionDuration: Duration(milliseconds: 300),
+                              pageBuilder:
+                                  (ctx, animation, secondaryAnimation) =>
+                                      getallPlaylistWidget(),
+                              transitionsBuilder: (context, animation,
+                                  secondaryAnimation, child) {
+                                return SlideTransition(
+                                  position: new Tween<Offset>(
+                                    begin: const Offset(1.0, 0.0),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: Offset.zero,
+                                      end: const Offset(1.0, 0.0),
+                                    ).animate(secondaryAnimation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                         child: Container(
-                          width: MediaQuery.of(context).size.width * 0.93,
+                          width: MediaQuery.of(context).size.width,
                           height: MediaQuery.of(context).size.height * 0.17,
                           decoration: BoxDecoration(
                             color: Colors.transparent,
@@ -2029,320 +964,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                             mainAxisSize: MainAxisSize.max,
                             children: [
                               Expanded(
-                                child: ListView(
-                                  padding: EdgeInsets.zero,
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          10, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/p1.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                'Pain',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4,
-                                              color: Colors.transparent,
-                                              offset: Offset(6, 2),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/p2.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                'Shades of Love',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4,
-                                              color: Colors.transparent,
-                                              offset: Offset(6, 2),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/p3.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                'Houseten.',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4,
-                                              color: Colors.transparent,
-                                              offset: Offset(6, 2),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/p4.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                '610: Bill Sullivan...',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          0, 0, 10, 0),
-                                      child: Container(
-                                        width: 100,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4,
-                                              color: Colors.transparent,
-                                              offset: Offset(6, 2),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(9),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(0, 0, 1, 0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Image.asset(
-                                                  'assets/images/user3.png',
-                                                  width: 100,
-                                                  height: 100,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(3, 0, 0, 0),
-                                              child: Text(
-                                                '610: Bill Sullivan...',
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyText1
-                                                        .override(
-                                                          fontFamily:
-                                                              'Urbanist',
-                                                          color: Colors.black,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ).animateOnPageLoad(animationsMap[
-                                          'containerOnPageLoadAnimation1']!),
-                                    ),
-                                  ],
-                                ),
+                                child: homepageplaylistwidget(),
                               ),
                             ],
                           ),
@@ -2364,7 +986,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                     Align(
                       alignment: AlignmentDirectional(-0.1, 0.1),
                       child: Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(20, 19, 0, 0),
+                        padding: EdgeInsetsDirectional.fromSTEB(20, 0, 0, 0),
                         child: Text(
                           'Catagories',
                           textAlign: TextAlign.end,
@@ -2378,52 +1000,46 @@ class _HomePageWidgetState extends State<HomePageWidget>
                       ),
                     ),
                     Flexible(
-                      child: Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              MediaQuery.of(context).size.width * 0.42,
-                              19,
-                              0,
-                              0),
-                          child: TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              'See all',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Poppins',
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                            padding:
+                                EdgeInsetsDirectional.fromSTEB(0, 0, 20, 0),
+                            child: TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                'See all',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                ),
                               ),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: Color(0xFFF15C00),
-                              //disabledForegroundColor : Colors.grey, // Disable color
-                            ),
-                          )),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Color(0xFFF15C00),
+                                //disabledForegroundColor : Colors.grey, // Disable color
+                              ),
+                            )),
+                      ),
                     ),
                   ],
                 ),
               ),
-              SingleChildScrollView(
-                child: Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height * 0.35,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                    ),
-                    padding: EdgeInsets.all(12.0),
-                    child: GridView.builder(
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      itemCount: images.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 4.0,
-                          mainAxisExtent: 100,
-                          mainAxisSpacing: 8.0),
-                      itemBuilder: (BuildContext context, int index) {
-                        return Image.asset(images[index]);
-                      },
-                    )),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: 250,
+                padding: EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                ),
+                child: Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                  child: Row(children: [
+                    Expanded(
+                      child: homepagecategorywidget(),
+                    )
+                  ]),
+                ),
               ),
             ],
           ),

@@ -2,11 +2,16 @@ import '../flutter_flow/flutter_flow_icon_button.dart';
 import '../flutter_flow/flutter_flow_theme.dart';
 import '../flutter_flow/flutter_flow_util.dart';
 import '../flutter_flow/flutter_flow_widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:koinonia/Api/Networkutils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../home_page/home_page_widget.dart';
+import '../model/users.dart';
+import '../sign_in/sign_in_widget.dart';
 import 'sign_up_model.dart';
 export 'sign_up_model.dart';
 
@@ -19,9 +24,16 @@ class SignUpWidget extends StatefulWidget {
 
 class _SignUpWidgetState extends State<SignUpWidget> {
   late SignUpModel _model;
+  String username = '';
+  String lastname = '';
+  String email = '';
+  String password = '';
+  late SharedPreferences sharedPreferences;
+  late List<SignupUser> _future;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _unfocusNode = FocusNode();
+  final GlobalKey<FormState> _formKey = GlobalKey();
 
   @override
   void initState() {
@@ -105,7 +117,7 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                 Align(
                   alignment: AlignmentDirectional(-0.92, 0.51),
                   child: Form(
-                    key: _model.formKey,
+                    key: _formKey,
                     autovalidateMode: AutovalidateMode.always,
                     child: Stack(
                       children: [
@@ -182,6 +194,9 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                               textAlign: TextAlign.justify,
                               validator: _model.textController1Validator
                                   .asValidator(context),
+                              onSaved: (value) {
+                                password = value!;
+                              },
                             ),
                           ),
                         ),
@@ -190,6 +205,9 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width * 0.90,
                             child: TextFormField(
+                              onSaved: (value) {
+                                username = value!;
+                              },
                               scrollPadding: EdgeInsets.only(bottom: 40),
                               controller: _model.textController2,
                               autofocus: false,
@@ -360,7 +378,33 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                         Align(
                           alignment: AlignmentDirectional(0.7, 0.90),
                           child: FFButtonWidget(
-                            onPressed: () => context.go('/signIn'),
+                            onPressed: () => {
+                              Navigator.of(context).push(
+                                PageRouteBuilder(
+                                  transitionDuration:
+                                      Duration(milliseconds: 300),
+                                  pageBuilder:
+                                      (ctx, animation, secondaryAnimation) =>
+                                          SignInWidget(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    return SlideTransition(
+                                      position: new Tween<Offset>(
+                                        begin: const Offset(1.0, 0.0),
+                                        end: Offset.zero,
+                                      ).animate(animation),
+                                      child: SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin: Offset.zero,
+                                          end: const Offset(1.0, 0.0),
+                                        ).animate(secondaryAnimation),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            },
                             text: 'Login',
                             options: FFButtonOptions(
                               width: 80,
@@ -385,7 +429,10 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                         Align(
                           alignment: AlignmentDirectional(-0.80, 0.80),
                           child: FFButtonWidget(
-                            onPressed: () => context.go('/verifyEmail'),
+                            onPressed: () {
+                              onpress();
+                              print("signup pressed");
+                            },
                             text: 'Sign Up',
                             options: FFButtonOptions(
                               width: 130,
@@ -473,6 +520,9 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width * 0.90,
                             child: TextFormField(
+                              onSaved: (value) {
+                                email = value!;
+                              },
                               scrollPadding: EdgeInsets.only(bottom: 40),
                               controller: _model.textController4,
                               autofocus: false,
@@ -614,6 +664,72 @@ class _SignUpWidgetState extends State<SignUpWidget> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  onpress() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    _formKey.currentState?.save();
+    await Networkutils.postSignup(
+      _model.textController4.text,
+      _model.textController1.text,
+      _model.textController2.text,
+    ).then((value) {
+      print(_model.textController4.text);
+      print(_model.textController1.text);
+      print(_model.textController2.text);
+
+      setState(() {
+        _future = value!;
+      });
+    });
+
+    try {
+      // ignore: unnecessary_null_comparison
+      if (_future[0] == null) {
+        print('object');
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('check Your credetials!')));
+        return;
+      }
+    } on RangeError catch (_) {
+      return ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('User is Already Registered!'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+    // MyData.myName = _future.result[0].userId;
+    // MyData.myImage = _future.result[0].userProfilePic;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // prefs.setBool("isfirst", false);
+    // prefs.setString("name", _future.result[0].userId);
+    //prefs.setString("email", _future.result[0].userEmail);
+    //prefs.setString("username", _future.result[0].userName);
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: Duration(milliseconds: 300),
+        pageBuilder: (ctx, animation, secondaryAnimation) => SignInWidget(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: new Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: Offset.zero,
+                end: const Offset(1.0, 0.0),
+              ).animate(secondaryAnimation),
+              child: child,
+            ),
+          );
+        },
       ),
     );
   }

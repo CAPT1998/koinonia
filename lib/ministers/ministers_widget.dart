@@ -11,7 +11,21 @@ import 'ministers_model.dart';
 export 'ministers_model.dart';
 
 class MinistersWidget extends StatefulWidget {
-  const MinistersWidget({Key? key}) : super(key: key);
+  //const MinistersWidget({Key? key}) : super(key: key);
+  final String artistid;
+  final String artistname;
+  final String artstimage;
+  // final String countview;
+  // final int album;
+  // final String type;
+  MinistersWidget(
+    this.artistid,
+    this.artistname,
+    this.artstimage,
+    // this.countview,
+    //this.album,
+    // this.type,
+  );
 
   @override
   _MinistersWidgetState createState() => _MinistersWidgetState();
@@ -57,7 +71,7 @@ class _MinistersWidgetState extends State<MinistersWidget> {
             color: Colors.black,
             size: 30,
           ),
-          onPressed: () => context.go('/library'),
+          onPressed: () => {Navigator.pop(context)},
         ),
         title: Align(
           alignment: AlignmentDirectional(-0.2, 0),
@@ -101,13 +115,14 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                 child: Stack(
                   children: [
                     Align(
-                      alignment: AlignmentDirectional(0.1, -0.4),
+                      alignment: AlignmentDirectional(0, -0.4),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(33),
-                        child: Image.asset(
-                          'assets/images/2500202bf5f45b615037091cf3c441db.png',
-                          width: 110,
-                          height: 126.1,
+                        borderRadius: BorderRadius.circular(53),
+                        child: Image.network(
+                          // ignore: prefer_interpolation_to_compose_strings
+                          "https://mediahype.site/admin/" + widget.artstimage,
+                          width: 160,
+                          height: 160,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -120,7 +135,7 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                         },
                         text: 'Play',
                         options: FFButtonOptions(
-                          width: 120,
+                          width: 100,
                           height: 65,
                           color: Color(0xFFF15C00),
                           textStyle:
@@ -141,7 +156,7 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                     Align(
                       alignment: AlignmentDirectional(-0.89, 0.49),
                       child: Text(
-                        'Lorem epsum',
+                        widget.artistname,
                         style: FlutterFlowTheme.of(context).bodyText1.override(
                               fontFamily: 'Urbanist',
                               fontSize: 24,
@@ -163,8 +178,8 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                         style: FlutterFlowTheme.of(context).bodyText1,
                       ),
                     ),
-                    new Expanded(
-                      flex: 1,
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(10, 0, 0, 0),
                       child: Align(
                         alignment: AlignmentDirectional(0.8, 0.95),
                         child: Text(
@@ -195,6 +210,7 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                       child: Text(
                         'Top Tracks',
                         style: FlutterFlowTheme.of(context).bodyText1.override(
+                              color: Colors.black,
                               fontFamily: 'Urbanist',
                               fontSize: 21,
                               fontWeight: FontWeight.bold,
@@ -205,7 +221,7 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                       child: Align(
                         // alignment: AlignmentDirectional(0, 0),
                         child: GestureDetector(
-                          onTap: () => context.go('/playing'),
+                          onTap: () => {},
                           child: Container(
                             width: MediaQuery.of(context).size.width,
                             height: 190.7,
@@ -214,6 +230,7 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                                   .secondaryBackground,
                             ),
                             child: ListView(
+                              physics: ScrollPhysics(),
                               padding: EdgeInsets.zero,
                               scrollDirection: Axis.vertical,
                               children: [
@@ -252,7 +269,7 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                    12, 30, 0, 0),
+                                                    10, 30, 0, 0),
                                             child: Text(
                                               'Broken Heart',
                                               style:
@@ -276,30 +293,27 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                                         ],
                                       ),
                                       new Expanded(
-                                        flex: 1,
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.38,
-                                                  0,
-                                                  0,
-                                                  0),
-                                          child: FlutterFlowIconButton(
-                                            borderColor: Colors.transparent,
-                                            borderRadius: 30,
-                                            borderWidth: 1,
-                                            buttonSize: 60,
-                                            icon: Icon(
-                                              Icons.play_arrow_rounded,
-                                              color: Color(0xFFF15C00),
-                                              size: 25,
+                                        //flex: 1,
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Padding(
+                                            padding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    0, 0, 0, 0),
+                                            child: FlutterFlowIconButton(
+                                              borderColor: Colors.transparent,
+                                              borderRadius: 30,
+                                              borderWidth: 1,
+                                              buttonSize: 60,
+                                              icon: Icon(
+                                                Icons.play_arrow_rounded,
+                                                color: Color(0xFFF15C00),
+                                                size: 25,
+                                              ),
+                                              onPressed: () {
+                                                print('IconButton pressed ...');
+                                              },
                                             ),
-                                            onPressed: () {
-                                              print('IconButton pressed ...');
-                                            },
                                           ),
                                         ),
                                       ),
@@ -342,7 +356,7 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
-                                                  12, 0, 0, 0),
+                                                  0, 0, 0, 0),
                                           child: Text(
                                             '29 Song',
                                             style: FlutterFlowTheme.of(context)
@@ -357,27 +371,26 @@ class _MinistersWidgetState extends State<MinistersWidget> {
                                       ],
                                     ),
                                     new Expanded(
-                                      flex: 1,
-                                      child: Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            MediaQuery.of(context).size.width *
-                                                0.45,
-                                            0,
-                                            0,
-                                            0),
-                                        child: FlutterFlowIconButton(
-                                          borderColor: Colors.transparent,
-                                          borderRadius: 30,
-                                          borderWidth: 1,
-                                          buttonSize: 60,
-                                          icon: Icon(
-                                            Icons.play_arrow_rounded,
-                                            color: Color(0xFFF15C00),
-                                            size: 25,
+                                      child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Padding(
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  0, 0, 0, 0),
+                                          child: FlutterFlowIconButton(
+                                            borderColor: Colors.transparent,
+                                            borderRadius: 30,
+                                            borderWidth: 1,
+                                            buttonSize: 60,
+                                            icon: Icon(
+                                              Icons.play_arrow_rounded,
+                                              color: Color(0xFFF15C00),
+                                              size: 25,
+                                            ),
+                                            onPressed: () {
+                                              print('IconButton pressed ...');
+                                            },
                                           ),
-                                          onPressed: () {
-                                            print('IconButton pressed ...');
-                                          },
                                         ),
                                       ),
                                     ),

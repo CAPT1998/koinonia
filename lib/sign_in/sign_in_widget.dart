@@ -1,4 +1,10 @@
 import '../flutter_flow/flutter_flow_icon_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:koinonia/Api/Networkutils.dart';
+import '../home_page/home_page_widget.dart';
+import '../main.dart';
+import '../model/users.dart';
+
 import '../flutter_flow/flutter_flow_theme.dart';
 import '../flutter_flow/flutter_flow_util.dart';
 import '../flutter_flow/flutter_flow_widgets.dart';
@@ -7,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:koinonia/sign_up/sign_up_widget.dart';
 import 'sign_in_model.dart';
 export 'sign_in_model.dart';
 
@@ -22,14 +29,16 @@ class _SignInWidgetState extends State<SignInWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _unfocusNode = FocusNode();
+  TextEditingController _passcontroller = TextEditingController();
+  TextEditingController _emailcontroller = TextEditingController();
+  late SharedPreferences sharedPreferences;
 
+  late List<Users> _data;
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => SignInModel());
 
-    _model.textController1 = TextEditingController();
-    _model.textController2 = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
@@ -39,6 +48,85 @@ class _SignInWidgetState extends State<SignInWidget> {
 
     _unfocusNode.dispose();
     super.dispose();
+  }
+
+  onpress() async {
+    if (_emailcontroller.text == null && _passcontroller == null) {
+      print('object');
+      return;
+    }
+    await Networkutils()
+        .postlogin(
+      _emailcontroller.text,
+      _passcontroller.text,
+    )
+        .then((value) {
+      setState(() {
+        _data = value!;
+      });
+    });
+    try {
+      if (_data[0].userId == null) {
+        print('object');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            backgroundColor: Color(0xFFF15C00),
+            content: Text(
+              'check Your credetials!',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Urbanist',
+              ),
+            )));
+        return;
+      }
+    } on RangeError catch (_) {
+      // Navigator.of(context).pop();
+      return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: Color(0xFFF15C00),
+          content: Text(
+            'Check Your credetials!',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'Urbanist',
+            ),
+          )));
+    }
+    print(_data[0].userProfilePic);
+    // MyData.myName = _data[0].userId;
+    // MyData.myImage = _data[0].userProfilePic;
+    print("object");
+    print(_data[0].userId);
+    // print(MyData.myImage);
+    // await datasave();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    prefs.setBool("isfirst", false);
+
+    prefs.setString("name", _data[0].userId);
+    prefs.setString("email", _data[0].userEmail);
+    prefs.setString("username", _data[0].userName);
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: Duration(milliseconds: 300),
+        pageBuilder: (ctx, animation, secondaryAnimation) =>
+            NavBarPage(initialPage: 'HomePage'),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: new Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: Offset.zero,
+                end: const Offset(1.0, 0.0),
+              ).animate(secondaryAnimation),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -67,7 +155,42 @@ class _SignInWidgetState extends State<SignInWidget> {
                 Align(
                   alignment: AlignmentDirectional(-0.85, -0.8),
                   child: FFButtonWidget(
-                    onPressed: () => context.go('/homePage'),
+                    onPressed: () => {
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          transitionDuration: Duration(milliseconds: 300),
+                          pageBuilder: (ctx, animation, secondaryAnimation) =>
+                              NavBarPage(initialPage: 'HomePage'),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return SlideTransition(
+                              position: new Tween<Offset>(
+                                begin: const Offset(1.0, 0.0),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: Offset.zero,
+                                  end: const Offset(1.0, 0.0),
+                                ).animate(secondaryAnimation),
+                                child: child,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          backgroundColor: Color(0xFFF15C00),
+                          //elevation: 50,
+                          duration: Duration(seconds: 1),
+                          content: Text(
+                            'Logged in as Guest!',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Urbanist',
+                            ),
+                          ))),
+                    },
                     text: 'Skip',
                     options: FFButtonOptions(
                       width: 50,
@@ -147,7 +270,7 @@ class _SignInWidgetState extends State<SignInWidget> {
                           child: SizedBox(
                             width: MediaQuery.of(context).size.width * 0.90,
                             child: TextFormField(
-                              controller: _model.textController1,
+                              controller: _passcontroller,
                               autofocus: false,
                               scrollPadding: EdgeInsets.only(bottom: 40),
                               textCapitalization: TextCapitalization.none,
@@ -211,7 +334,7 @@ class _SignInWidgetState extends State<SignInWidget> {
                             width: MediaQuery.of(context).size.width * 0.90,
                             child: TextFormField(
                               scrollPadding: EdgeInsets.only(bottom: 40),
-                              controller: _model.textController2,
+                              controller: _emailcontroller,
                               autofocus: false,
                               textCapitalization: TextCapitalization.none,
                               obscureText: false,
@@ -413,7 +536,33 @@ class _SignInWidgetState extends State<SignInWidget> {
                         Align(
                           alignment: AlignmentDirectional(0.7, 0.89),
                           child: FFButtonWidget(
-                            onPressed: () => context.go('/signUp'),
+                            onPressed: () => {
+                              Navigator.of(context).push(
+                                PageRouteBuilder(
+                                  transitionDuration:
+                                      Duration(milliseconds: 300),
+                                  pageBuilder:
+                                      (ctx, animation, secondaryAnimation) =>
+                                          SignUpWidget(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    return SlideTransition(
+                                      position: new Tween<Offset>(
+                                        begin: const Offset(1.0, 0.0),
+                                        end: Offset.zero,
+                                      ).animate(animation),
+                                      child: SlideTransition(
+                                        position: Tween<Offset>(
+                                          begin: Offset.zero,
+                                          end: const Offset(1.0, 0.0),
+                                        ).animate(secondaryAnimation),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            },
                             text: 'Sign up for free',
                             options: FFButtonOptions(
                               width: 117,
@@ -452,23 +601,27 @@ class _SignInWidgetState extends State<SignInWidget> {
                           alignment: AlignmentDirectional(-0.85, 0.76),
                           child: FFButtonWidget(
                             onPressed: () {
-                              var snackBar = SnackBar(
-                                content: Text(
-                                  'login successful',
-                                  style: TextStyle(
-                                    color: Color(0xFFF15C00),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                shape: StadiumBorder(),
-                                width: 200,
-                                duration: Duration(microseconds: 1),
-                                behavior: SnackBarBehavior.floating,
-                                onVisible: () => context.go('/verifyEmail'),
-                              );
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(snackBar);
+                              onpress();
+                              //print(_emailcontroller.text);
+                              //print(_passcontroller.text);
+
+                              // var snackBar = SnackBar(
+                              // content: Text(
+                              //   'login successful',
+                              //   style: TextStyle(
+                              //     color: Color(0xFFF15C00),
+                              //      fontWeight: FontWeight.bold,
+                              //    ),
+                              //    textAlign: TextAlign.center,
+                              //  ),
+                              //  shape: StadiumBorder(),
+                              //   width: 200,
+                              //   duration: Duration(microseconds: 1),
+                              //  behavior: SnackBarBehavior.floating,
+                              //   onVisible: () => context.go('/verifyEmail'),
+                              //   );
+                              //  ScaffoldMessenger.of(context)
+                              //    .showSnackBar(snackBar);
                             },
                             text: 'Log in',
                             options: FFButtonOptions(

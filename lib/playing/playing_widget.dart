@@ -1,3 +1,10 @@
+import 'package:koinonia/Api/Networkutils.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:math';
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'dart:io';
 import '../flutter_flow/flutter_flow_ad_banner.dart';
 import '../flutter_flow/flutter_flow_icon_button.dart';
 import '../flutter_flow/flutter_flow_theme.dart';
@@ -7,19 +14,36 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:like_button/like_button.dart';
 
 import 'playing_model.dart';
 export 'playing_model.dart';
 
 class PlayingWidget extends StatefulWidget {
-  const PlayingWidget({Key? key}) : super(key: key);
+  final String musicid;
+  final String musicalbumname;
+  final String musicfile;
+  final String musicimage;
+  final String musictitle;
+  final String musicartist;
+
+  const PlayingWidget({
+    Key? key,
+    required this.musicid,
+    required this.musicalbumname,
+    required this.musicfile,
+    required this.musicimage,
+    required this.musictitle,
+    required this.musicartist,
+  }) : super(key: key);
 
   @override
   _PlayingWidgetState createState() => _PlayingWidgetState();
 }
 
 class _PlayingWidgetState extends State<PlayingWidget> {
-  late PlayingModel _model;
+  //late PlayingModel _model;
+  late Networkutils networkutils;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _unfocusNode = FocusNode();
@@ -27,17 +51,95 @@ class _PlayingWidgetState extends State<PlayingWidget> {
   @override
   void initState() {
     super.initState();
-    _model = createModel(context, () => PlayingModel());
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+    //  _model = createModel(context, () => PlayingModel());
+    networkutils = Networkutils();
   }
 
   @override
   void dispose() {
-    _model.dispose();
+    // _model.dispose();
 
     _unfocusNode.dispose();
     super.dispose();
+  }
+
+  Future<bool> onLikeButtonTapped(bool isLiked) async {
+    /// send your request here
+    await networkutils.addtoliked("1", "6");
+
+    /// if failed, you can do nothin
+    // return success? !isLiked:isLiked;
+
+    return !isLiked;
+  }
+
+  Future<String> _findLocalPath() async {
+    final directory = Platform.isAndroid
+        ? await getExternalStorageDirectory()
+        : await getApplicationDocumentsDirectory();
+    return directory!.path;
+  }
+
+  late String _localPath;
+  // ProgressDialog pr;
+  double percentage = 0.0;
+  bool downloading = false;
+  var progress = "";
+  Widget dialog() {
+    return Center(
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        backgroundColor: Color(0xFFF15C00),
+      ),
+    );
+  }
+
+  Future<void> _download() async {
+    _localPath = (await _findLocalPath()) + '/Download';
+    final savedDir = Directory(_localPath);
+    bool hasExisted = await savedDir.exists();
+    if (!hasExisted) {
+      savedDir.create();
+    }
+    // pr = new ProgressDialog(context, type: ProgressDialogType.Normal);
+    dialog();
+
+    Dio dio = Dio();
+
+    var dirToSave = await getApplicationDocumentsDirectory();
+
+    await dio.download("https://adminpanel.mediahype.site/" + widget.musicfile,
+        "$_localPath/" + widget.musictitle + ".mp3",
+        onReceiveProgress: (rec, total) {
+      setState(() {
+        downloading = true;
+
+        // pr.show();
+        dialog();
+
+        Future.delayed(Duration(seconds: 2)).then((onvalue) {
+          percentage = (percentage + 1.0);
+          print("=======================>>>" + percentage.toString());
+          print("${dirToSave.path}/" + widget.musictitle + ".mp3");
+        });
+      });
+    });
+
+    setState(() {
+      downloading = false;
+      print("${dirToSave.path}/" + widget.musictitle + ".mp3");
+      progress = "Complete";
+      Fluttertoast.showToast(
+        msg: "Download Complated!" +
+            "${dirToSave.path}/" +
+            widget.musictitle +
+            ".mp3",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+      );
+      // pr.hide().whenComplete(() {});
+    });
   }
 
   @override
@@ -59,7 +161,7 @@ class _PlayingWidgetState extends State<PlayingWidget> {
             color: Colors.black,
             size: 30,
           ),
-          onPressed: () => context.go('/library'),
+          onPressed: () => {Navigator.pop(context)},
         ),
         title: Column(
           mainAxisSize: MainAxisSize.max,
@@ -80,7 +182,7 @@ class _PlayingWidgetState extends State<PlayingWidget> {
             Align(
               alignment: AlignmentDirectional(-0.3, 0),
               child: Text(
-                'Lorem Epsum Album',
+                widget.musicalbumname,
                 style: FlutterFlowTheme.of(context).bodyText1.override(
                       fontFamily: 'Poppins',
                       fontSize: 12,
@@ -146,7 +248,8 @@ class _PlayingWidgetState extends State<PlayingWidget> {
                                     borderRadius: BorderRadius.circular(40.0),
                                     image: DecorationImage(
                                       image: NetworkImage(
-                                          "https://i.ytimg.com/vi/esfTzCkJGlY/maxresdefault.jpg"),
+                                          "https://mediahype.site/admin/" +
+                                              widget.musicimage),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -205,9 +308,9 @@ class _PlayingWidgetState extends State<PlayingWidget> {
                               children: [
                                 Expanded(
                                   child: Align(
-                                    alignment: AlignmentDirectional(-0.15, 0),
+                                    alignment: AlignmentDirectional(0, 0),
                                     child: Text(
-                                      'Lorem epsum',
+                                      widget.musictitle,
                                       textAlign: TextAlign.center,
                                       style: FlutterFlowTheme.of(context)
                                           .bodyText1
@@ -226,7 +329,7 @@ class _PlayingWidgetState extends State<PlayingWidget> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'Lorem epsum',
+                                    widget.musicartist,
                                     textAlign: TextAlign.center,
                                     style: FlutterFlowTheme.of(context)
                                         .bodyText1
@@ -255,6 +358,8 @@ class _PlayingWidgetState extends State<PlayingWidget> {
                                     size: 20,
                                   ),
                                   onPressed: () {
+                                    _download();
+
                                     var snackBar = SnackBar(
                                       content: Text(
                                         'Download Started',
@@ -348,15 +453,23 @@ class _PlayingWidgetState extends State<PlayingWidget> {
                                         .showSnackBar(snackBar);
                                   },
                                 ),
+                                LikeButton(
+                                  size: 20,
+                                  isLiked: true,
+                                  postFrameCallback: (LikeButtonState state) {
+                                    state.controller?.forward();
+                                  },
+                                  onTap: onLikeButtonTapped,
+                                ),
                               ],
                             ),
                             Container(
                               width: 300,
                               height: 170,
                               child: custom_widgets.AudioPlayerWidget(
-                                width: 300,
-                                height: 100,
-                              ),
+                                  width: 300,
+                                  height: 100,
+                                  musicfile: widget.musicfile),
                             ),
                           ],
                         ),

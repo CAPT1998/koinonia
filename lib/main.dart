@@ -109,8 +109,8 @@ class _NavBarPageState extends State<NavBarPage> {
     final tabs = {
       'HomePage': HomePageWidget(),
       'SearchScreen': SearchScreenWidget(),
-      'Setting': SettingWidget(),
       'Library': LibraryWidget(),
+      'Setting': SettingWidget(),
     };
     final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
     return Scaffold(
@@ -149,18 +149,18 @@ class _NavBarPageState extends State<NavBarPage> {
               label: 'Discover',
             ),
             BottomNavigationBarItem(
-              icon: new Image.asset('assets/images/sett.png',
-                  width: 40, height: 40),
-              activeIcon: new Image.asset('assets/images/asett.png',
-                  width: 40, height: 40),
-              label: 'Setting',
-            ),
-            BottomNavigationBarItem(
               icon: new Image.asset('assets/images/lib.png',
                   width: 40, height: 40),
               activeIcon: new Image.asset('assets/images/alib.png',
                   width: 40, height: 40),
               label: 'Library',
+            ),
+            BottomNavigationBarItem(
+              icon: new Image.asset('assets/images/sett.png',
+                  width: 40, height: 40),
+              activeIcon: new Image.asset('assets/images/asett.png',
+                  width: 40, height: 40),
+              label: 'Setting',
             ),
           ],
         ),

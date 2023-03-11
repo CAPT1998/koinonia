@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:koinonia/likedsongs.dart';
+import '../ministers/ministers_widget.dart';
 import '../flutter_flow/flutter_flow_ad_banner.dart';
 import '../flutter_flow/flutter_flow_audio_player.dart';
 import '../flutter_flow/flutter_flow_icon_button.dart';
@@ -6,8 +10,12 @@ import '../flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../model/musics.dart';
+import '../model/viewAlbum.dart';
 import 'albums_model.dart';
 export 'albums_model.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
 class AlbumsWidget extends StatefulWidget {
   const AlbumsWidget({Key? key}) : super(key: key);
@@ -16,30 +24,128 @@ class AlbumsWidget extends StatefulWidget {
   _AlbumsWidgetState createState() => _AlbumsWidgetState();
 }
 
-class _AlbumsWidgetState extends State<AlbumsWidget> {
-  late AlbumsModel _model;
+class getAllMusicsApi {
+  static Future<List<Albummodel>> getallalbums() async {
+    print("HElloworld");
 
+    final url = Uri.parse('https://adminpanel.mediahype.site/API/getAllAlbums');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List music = json.decode(response.body);
+      final List artistinfo = json.decode(response.body);
+
+      return music.map((json) => Albummodel.fromJson(json)).toList();
+      //artistinfo.map((json) => Artists.fromJson(json)).toList();
+    }
+    throw Exception();
+  }
+}
+
+class _AlbumsWidgetState extends State<AlbumsWidget> {
+  List<Albummodel> music = [];
+  List<Artists> artistinfo = [];
+  List allalbumimage = [];
+  List allMusicsinfo = [];
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _unfocusNode = FocusNode();
+  List AllArtistsinfo = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _model = createModel(context, () => AlbumsModel());
+  Future init1() async {
+    final music = await getAllMusicsApi.getallalbums();
+    setState(() => this.music = music);
+    setState(() {
+      this.artistinfo = artistinfo;
+    });
+    print("hello world");
+    //  _model = createModel(context, () => AlbumsModel());
 
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
   @override
-  void dispose() {
-    _model.dispose();
+  void initState() {
+    init1();
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+  }
 
+  @override
+  void dispose() {
     _unfocusNode.dispose();
     super.dispose();
   }
 
+  Widget buildAlbum(
+    Albummodel music,
+  ) =>
+      Container(
+        child: GestureDetector(
+          onTap: () {
+            /*  
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => MinistersWidget(
+                  album.albumId,
+                  album.albumName,
+                  album.albumImage,
+                  '',
+                  album.isLiked,
+                  "Album",
+                ),
+              ),
+            );*/
+          },
+          child: Column(
+            //mainAxisSize: MainAxisSize.max,
+            children: [
+              Align(
+                alignment: AlignmentDirectional(0.15, 0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: Image.network(
+                    // ignore: prefer_interpolation_to_compose_strings
+                    "https://adminpanel.mediahype.site/" + music.albumImage,
+                    width: 125,
+                    height: 125,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Container(
+                child: Align(
+                  alignment: AlignmentDirectional(0, -0.15),
+                  child: Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(0, 5, 0, 0),
+                      child: Text(
+                        music.albumartistname,
+                        style: FlutterFlowTheme.of(context).bodyText1.override(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      )),
+                ),
+              ),
+              Container(
+                  child: Text(
+                music.albumName,
+                style: FlutterFlowTheme.of(context).bodyText1.override(
+                      fontFamily: 'Inter',
+                      color: Color(0xFFA7A7A7),
+                      fontSize: 10,
+                      fontWeight: FontWeight.normal,
+                    ),
+              ))
+            ],
+          ),
+        ),
+      );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
@@ -56,7 +162,7 @@ class _AlbumsWidgetState extends State<AlbumsWidget> {
             color: Colors.black,
             size: 30,
           ),
-          onPressed: () => context.go('/library'),
+          onPressed: () => {Navigator.pop(context)},
         ),
         title: Align(
           alignment: AlignmentDirectional(-0.2, 0),
@@ -74,412 +180,53 @@ class _AlbumsWidgetState extends State<AlbumsWidget> {
         centerTitle: false,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: GestureDetector(
-          onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              FlutterFlowAdBanner(
-                width: MediaQuery.of(context).size.width,
-                height: 50,
-                showsTestAd: true,
-              ),
-              Container(
-                width: 466.2,
-                height: 681.5,
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).secondaryBackground,
-                ),
-                child: Stack(
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional(-0.75, -0.92),
-                      child: Text(
-                        'Albums',
-                        style: FlutterFlowTheme.of(context).bodyText1.override(
-                              fontFamily: 'Urbanist',
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
+      body: Container(
+        color: Colors.white,
+        child: Column(
+          children: <Widget>[
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                new Expanded(
+                  flex: 1,
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                    child: FlutterFlowAdBanner(
+                      width: MediaQuery.of(context).size.width,
+                      height: 69,
+                      showsTestAd: true,
                     ),
-                    SingleChildScrollView(
-                      child: Align(
-                        child: GestureDetector(
-                          onTap: () => context.go('/ministers'),
-                          //alignment: AlignmentDirectional(0, 0),
-                          child: Container(
-                            width: MediaQuery.of(context).size.width,
-                            height: 544.5,
-                            decoration: BoxDecoration(
-                              color: FlutterFlowTheme.of(context)
-                                  .secondaryBackground,
-                            ),
-                            child: GridView(
-                              padding: EdgeInsets.zero,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 0,
-                                childAspectRatio: 1,
-                              ),
-                              scrollDirection: Axis.vertical,
-                              children: [
-                                Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0.15, 0),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          child: Image.asset(
-                                            'assets/images/dd9b326a3b43c57e97f288f094a69930.png',
-                                            width: 135,
-                                            height: 135,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, -0.15),
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  0, 5, 0, 0),
-                                          child: Text(
-                                            'Denny Caknan',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyText1
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        'Loss Doll',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyText1
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: Color(0xFFA7A7A7),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0.15, 0),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          child: Image.asset(
-                                            'assets/images/455ae48a81e56c1d908f971b50d0f823.png',
-                                            width: 135,
-                                            height: 145,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, -0.15),
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  0, 0, 0, 0),
-                                          child: Text(
-                                            'Denny Caknan',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyText1
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        'Loss Doll',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyText1
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: Color(0xFFA7A7A7),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0.15, 0),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          child: Image.asset(
-                                            'assets/images/455ae48a81e56c1d908f971b50d0f823.png',
-                                            width: 135,
-                                            height: 135,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, -0.15),
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  0, 5, 0, 0),
-                                          child: Text(
-                                            'Denny Caknan',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyText1
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        'Loss Doll',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyText1
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: Color(0xFFA7A7A7),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0.15, 0),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          child: Image.asset(
-                                            'assets/images/dd9b326a3b43c57e97f288f094a69930.png',
-                                            width: 135,
-                                            height: 135,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, -0.15),
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  0, 5, 0, 0),
-                                          child: Text(
-                                            'Denny Caknan',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyText1
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        'Loss Doll',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyText1
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: Color(0xFFA7A7A7),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0.15, 0),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          child: Image.asset(
-                                            'assets/images/dd9b326a3b43c57e97f288f094a69930.png',
-                                            width: 135,
-                                            height: 135,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, -0.15),
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  0, 5, 0, 0),
-                                          child: Text(
-                                            'Denny Caknan',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyText1
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        'Loss Doll',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyText1
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: Color(0xFFA7A7A7),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0.15, 0),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          child: Image.asset(
-                                            'assets/images/455ae48a81e56c1d908f971b50d0f823.png',
-                                            width: 135,
-                                            height: 135,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional(0, -0.15),
-                                        child: Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  0, 5, 0, 0),
-                                          child: Text(
-                                            'Denny Caknan',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyText1
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        'Loss Doll',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyText1
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: Color(0xFFA7A7A7),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
+            Padding(
+              padding: EdgeInsetsDirectional.all(8.0),
+              child: Text(
+                'Albums',
+                textAlign: TextAlign.end,
+                style: FlutterFlowTheme.of(context).bodyText1.override(
+                      fontFamily: 'Source Sans Pro',
+                      fontSize: 21,
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: GridView.builder(
+                itemCount: music.length,
+                itemBuilder: (context, index) {
+                  final Musics = music[index];
+
+                  //final Artists = artistinfo[index];
+
+                  return buildAlbum(Musics);
+                },
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2),
+              ),
+            ),
+          ],
         ),
       ),
     );
